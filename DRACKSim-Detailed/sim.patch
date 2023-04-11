@@ -1,0 +1,37 @@
+diff -crB DRACKSIM_noPage/main.cpp DRACKSIM_noPage1/main.cpp
+*** DRACKSIM_noPage/main.cpp	2023-04-11 12:55:52.654103346 +0530
+--- DRACKSIM_noPage1/main.cpp	2023-04-11 12:50:19.904779468 +0530
+***************
+*** 14,20 ****
+  #include <sstream>	
+  #include <fstream>
+  using namespace std;
+! // #define local_remote 1
+  uint64_t common_clock = 0;
+  #include "mem_defs.cpp"
+  
+--- 14,20 ----
+  #include <sstream>	
+  #include <fstream>
+  using namespace std;
+! #define local_remote 1
+  uint64_t common_clock = 0;
+  #include "mem_defs.cpp"
+  
+***************
+*** 122,128 ****
+  	initialize_branch_predictor(nodeid);
+  	// simulation starts here, clock started
+  	// while (fileid<=1000)
+! 	while(common_clock<=(Result_cycle*10)+5 && total_num_inst_commited<=max_insts_to_simulate)
+  	{
+  		pthread_barrier_wait(&b);
+  
+--- 122,128 ----
+  	initialize_branch_predictor(nodeid);
+  	// simulation starts here, clock started
+  	// while (fileid<=1000)
+! 	while(common_clock<=(Result_cycle*10)+5)// && total_num_inst_commited<=max_insts_to_simulate)
+  	{
+  		pthread_barrier_wait(&b);
+  
