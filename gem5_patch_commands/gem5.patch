@@ -1,0 +1,581 @@
+Only in gem5/build_tools: __pycache__
+diff -crB Validation/gem5/configs/common/CacheConfig.py gem5/configs/common/CacheConfig.py
+*** Validation/gem5/configs/common/CacheConfig.py	2023-04-10 22:17:15.662487841 +0530
+--- gem5/configs/common/CacheConfig.py	2023-04-10 23:11:55.151378583 +0530
+***************
+*** 110,119 ****
+              None,
+          )
+      else:
+!         dcache_class, icache_class, l2_cache_class, walk_cache_class = (
+!             L1_DCache,
+!             L1_ICache,
+!             L2Cache,
+              None,
+          )
+  
+--- 110,120 ----
+              None,
+          )
+      else:
+!         dcache_class, icache_class, l2_cache_class, l3_cache_class, walk_cache_class = (
+!             L1_DCache, 
+!             L1_ICache, 
+!             L2Cache, 
+!             L3Cache, 
+              None,
+          )
+  
+***************
+*** 130,144 ****
+      if options.l2cache and options.elastic_trace_en:
+          fatal("When elastic trace is enabled, do not configure L2 caches.")
+  
+!     if options.l2cache:
+          # Provide a clock for the L2 and the L1-to-L2 bus here as they
+          # are not connected using addTwoLevelCacheHierarchy. Use the
+          # same clock as the CPUs.
+!         system.l2 = l2_cache_class(
+!             clk_domain=system.cpu_clk_domain, **_get_cache_opts("l2", options)
+!         )
+  
+!         system.tol2bus = L2XBar(clk_domain=system.cpu_clk_domain)
+          system.l2.cpu_side = system.tol2bus.mem_side_ports
+          system.l2.mem_side = system.membus.cpu_side_ports
+  
+--- 131,152 ----
+      if options.l2cache and options.elastic_trace_en:
+          fatal("When elastic trace is enabled, do not configure L2 caches.")
+  
+! 
+!     if options.l3cache:
+!         system.l3 = l3_cache_class(clk_domain=system.cpu_clk_domain,
+!                                    **_get_cache_opts('l3', options))
+!         system.tol3bus = L3XBar(clk_domain = system.cpu_clk_domain)
+!         system.l3.cpu_side = system.tol3bus.mem_side_ports
+!         system.l3.mem_side = system.membus.cpu_side_ports
+! 
+!     elif options.l2cache:
+          # Provide a clock for the L2 and the L1-to-L2 bus here as they
+          # are not connected using addTwoLevelCacheHierarchy. Use the
+          # same clock as the CPUs.
+!         system.l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
+!                                    **_get_cache_opts('l2', options))
+  
+!         system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
+          system.l2.cpu_side = system.tol2bus.mem_side_ports
+          system.l2.mem_side = system.membus.cpu_side_ports
+  
+***************
+*** 147,154 ****
+  
+      for i in range(options.num_cpus):
+          if options.caches:
+!             icache = icache_class(**_get_cache_opts("l1i", options))
+!             dcache = dcache_class(**_get_cache_opts("l1d", options))
+  
+              # If we have a walker cache specified, instantiate two
+              # instances here
+--- 155,162 ----
+  
+      for i in range(options.num_cpus):
+          if options.caches:
+!             icache = icache_class(**_get_cache_opts('l1i', options))
+!             dcache = dcache_class(**_get_cache_opts('l1d', options))
+  
+              # If we have a walker cache specified, instantiate two
+              # instances here
+***************
+*** 176,190 ****
+  
+              # When connecting the caches, the clock is also inherited
+              # from the CPU in question
+!             system.cpu[i].addPrivateSplitL1Caches(
+!                 icache, dcache, iwalkcache, dwalkcache
+!             )
+  
+              if options.memchecker:
+                  # The mem_side ports of the caches haven't been connected yet.
+                  # Make sure connectAllPorts connects the right objects.
+                  system.cpu[i].dcache = dcache_real
+                  system.cpu[i].dcache_mon = dcache_mon
+  
+          elif options.external_memory_system:
+              # These port names are presented to whatever 'external' system
+--- 184,204 ----
+  
+              # When connecting the caches, the clock is also inherited
+              # from the CPU in question
+!             system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
+!                                                   iwalkcache, dwalkcache)
+  
+              if options.memchecker:
+                  # The mem_side ports of the caches haven't been connected yet.
+                  # Make sure connectAllPorts connects the right objects.
+                  system.cpu[i].dcache = dcache_real
+                  system.cpu[i].dcache_mon = dcache_mon
++             
++             if options.l3cache:
++                 system.cpu[i].l2 = l2_cache_class(clk_domain=system.cpu_clk_domain,
++                                    **_get_cache_opts('l2', options))
++                 system.cpu[i].tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
++                 system.cpu[i].l2.cpu_side = system.cpu[i].tol2bus.mem_side_ports
++                 system.cpu[i].l2.mem_side =  system.tol3bus.cpu_side_ports
+  
+          elif options.external_memory_system:
+              # These port names are presented to whatever 'external' system
+***************
+*** 192,221 ****
+              # on these names.  For simplicity, we would advise configuring
+              # it to use this naming scheme; if this isn't possible, change
+              # the names below.
+!             if get_runtime_isa() in [ISA.X86, ISA.ARM, ISA.RISCV]:
+                  system.cpu[i].addPrivateSplitL1Caches(
+!                     ExternalCache("cpu%d.icache" % i),
+!                     ExternalCache("cpu%d.dcache" % i),
+!                     ExternalCache("cpu%d.itb_walker_cache" % i),
+!                     ExternalCache("cpu%d.dtb_walker_cache" % i),
+!                 )
+              else:
+                  system.cpu[i].addPrivateSplitL1Caches(
+!                     ExternalCache("cpu%d.icache" % i),
+!                     ExternalCache("cpu%d.dcache" % i),
+!                 )
+  
+          system.cpu[i].createInterruptController()
+!         if options.l2cache:
+              system.cpu[i].connectAllPorts(
+                  system.tol2bus.cpu_side_ports,
+!                 system.membus.cpu_side_ports,
+!                 system.membus.mem_side_ports,
+!             )
+          elif options.external_memory_system:
+              system.cpu[i].connectUncachedPorts(
+!                 system.membus.cpu_side_ports, system.membus.mem_side_ports
+!             )
+          else:
+              system.cpu[i].connectBus(system.membus)
+  
+--- 206,232 ----
+              # on these names.  For simplicity, we would advise configuring
+              # it to use this naming scheme; if this isn't possible, change
+              # the names below.
+!             if buildEnv['TARGET_ISA'] in ['x86', 'arm', 'riscv']:
+                  system.cpu[i].addPrivateSplitL1Caches(
+!                         ExternalCache("cpu%d.icache" % i),
+!                         ExternalCache("cpu%d.dcache" % i),
+!                         ExternalCache("cpu%d.itb_walker_cache" % i),
+!                         ExternalCache("cpu%d.dtb_walker_cache" % i))
+              else:
+                  system.cpu[i].addPrivateSplitL1Caches(
+!                         ExternalCache("cpu%d.icache" % i),
+!                         ExternalCache("cpu%d.dcache" % i))
+  
+          system.cpu[i].createInterruptController()
+!         if options.l3cache:
+!             system.cpu[i].connectAllPorts(system.cpu[i].tol2bus.cpu_side_ports, system.membus.cpu_side_ports, system.membus.mem_side_ports)
+!         elif options.l2cache:
+              system.cpu[i].connectAllPorts(
+                  system.tol2bus.cpu_side_ports,
+!                 system.membus.cpu_side_ports, system.membus.mem_side_ports)
+          elif options.external_memory_system:
+              system.cpu[i].connectUncachedPorts(
+!                 system.membus.cpu_side_ports, system.membus.mem_side_ports)
+          else:
+              system.cpu[i].connectBus(system.membus)
+  
+diff -crB Validation/gem5/configs/common/Caches.py gem5/configs/common/Caches.py
+*** Validation/gem5/configs/common/Caches.py	2023-04-10 21:10:02.984198876 +0530
+--- gem5/configs/common/Caches.py	2023-02-20 23:32:20.350660756 +0530
+***************
+*** 53,60 ****
+      assoc = 2
+      tag_latency = 2
+      data_latency = 2
+!     response_latency = 2
+!     mshrs = 4
+      tgts_per_mshr = 20
+  
+  
+--- 53,60 ----
+      assoc = 2
+      tag_latency = 2
+      data_latency = 2
+!     response_latency = 0
+!     mshrs = 8
+      tgts_per_mshr = 20
+  
+  
+***************
+*** 76,81 ****
+--- 76,90 ----
+      mshrs = 20
+      tgts_per_mshr = 12
+      write_buffers = 8
++     
++ class L3Cache(Cache):
++     assoc = 16
++     tag_latency = 32
++     data_latency = 32
++     response_latency = 32
++     mshrs = 32
++     tgts_per_mshr = 24
++     write_buffers = 16
+  
+  
+  class IOCache(Cache):
+Only in gem5/configs/common/cores: __pycache__
+diff -crB Validation/gem5/configs/common/Options.py gem5/configs/common/Options.py
+*** Validation/gem5/configs/common/Options.py	2023-04-10 21:10:02.984198876 +0530
+--- gem5/configs/common/Options.py	2023-02-19 19:15:32.983062458 +0530
+***************
+*** 178,183 ****
+--- 178,184 ----
+      )
+      parser.add_argument("--caches", action="store_true")
+      parser.add_argument("--l2cache", action="store_true")
++     parser.add_argument("--l3cache", action="store_true")
+      parser.add_argument("--num-dirs", type=int, default=1)
+      parser.add_argument("--num-l2caches", type=int, default=1)
+      parser.add_argument("--num-l3caches", type=int, default=1)
+Only in gem5/configs/common: __pycache__
+Only in gem5/configs/network: __pycache__
+Only in gem5/configs/ruby: __pycache__
+Only in gem5/configs/topologies: __pycache__
+Only in gem5/ext/ply/ply: __pycache__
+Binary files Validation/gem5/.git/index and gem5/.git/index differ
+diff -crB Validation/gem5/.git/logs/HEAD gem5/.git/logs/HEAD
+*** Validation/gem5/.git/logs/HEAD	2023-04-10 21:10:02.956199261 +0530
+--- gem5/.git/logs/HEAD	2023-01-30 11:11:25.227420438 +0530
+***************
+*** 1 ****
+! 0000000000000000000000000000000000000000 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 amit <amit@amit.(none)> 1681141202 +0530	clone: from https://gem5.googlesource.com/public/gem5
+--- 1 ----
+! 0000000000000000000000000000000000000000 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 amit <amit@amit.(none)> 1675057285 +0530	clone: from https://gem5.googlesource.com/public/gem5
+diff -crB Validation/gem5/.git/logs/refs/heads/stable gem5/.git/logs/refs/heads/stable
+*** Validation/gem5/.git/logs/refs/heads/stable	2023-04-10 21:10:02.956199261 +0530
+--- gem5/.git/logs/refs/heads/stable	2023-01-30 11:11:25.227420438 +0530
+***************
+*** 1 ****
+! 0000000000000000000000000000000000000000 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 amit <amit@amit.(none)> 1681141202 +0530	clone: from https://gem5.googlesource.com/public/gem5
+--- 1 ----
+! 0000000000000000000000000000000000000000 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 amit <amit@amit.(none)> 1675057285 +0530	clone: from https://gem5.googlesource.com/public/gem5
+diff -crB Validation/gem5/.git/logs/refs/remotes/origin/HEAD gem5/.git/logs/refs/remotes/origin/HEAD
+*** Validation/gem5/.git/logs/refs/remotes/origin/HEAD	2023-04-10 21:10:02.956199261 +0530
+--- gem5/.git/logs/refs/remotes/origin/HEAD	2023-01-30 11:11:25.227420438 +0530
+***************
+*** 1 ****
+! 0000000000000000000000000000000000000000 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 amit <amit@amit.(none)> 1681141202 +0530	clone: from https://gem5.googlesource.com/public/gem5
+--- 1 ----
+! 0000000000000000000000000000000000000000 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 amit <amit@amit.(none)> 1675057285 +0530	clone: from https://gem5.googlesource.com/public/gem5
+Only in gem5/.git/objects/pack: pack-ce164d28cdc21569162c3a5dac10314d006d1a7e.idx
+Only in gem5/.git/objects/pack: pack-ce164d28cdc21569162c3a5dac10314d006d1a7e.pack
+Only in Validation/gem5/.git/objects/pack: pack-f96b43262dd207a722fbe0b54c807f915ce1255b.idx
+Only in Validation/gem5/.git/objects/pack: pack-f96b43262dd207a722fbe0b54c807f915ce1255b.pack
+diff -crB Validation/gem5/.git/packed-refs gem5/.git/packed-refs
+*** Validation/gem5/.git/packed-refs	2023-04-10 21:10:02.956199261 +0530
+--- gem5/.git/packed-refs	2023-01-30 11:11:25.227420438 +0530
+***************
+*** 1,9 ****
+  # pack-refs with: peeled fully-peeled sorted 
+! 7eff90acdcddb0288074815a3be689d2b111bf29 refs/remotes/origin/develop
+  8c47c0dd63f495a058e3a25906a39a352113c2a6 refs/remotes/origin/feature-gui
+  5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 refs/remotes/origin/master
+  f5eb5bdf6a4c654327f7a77010f028015c7e0680 refs/remotes/origin/multi-isa
+- 5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 refs/remotes/origin/release-staging-v22-1-1
+  5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 refs/remotes/origin/stable
+  f5e36d156dc33a6c01c69c19efc2b5b0450496f6 refs/tags/copyright_update
+  915557b7dd8426f526a99ac08adf8d1f8188bda1 refs/tags/v19.0.0.0
+--- 1,8 ----
+  # pack-refs with: peeled fully-peeled sorted 
+! 534d9dea10847ed0efbc289c3591e0f671c05765 refs/remotes/origin/develop
+  8c47c0dd63f495a058e3a25906a39a352113c2a6 refs/remotes/origin/feature-gui
+  5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 refs/remotes/origin/master
+  f5eb5bdf6a4c654327f7a77010f028015c7e0680 refs/remotes/origin/multi-isa
+  5fa484e2e02604ad3a5bf01f35ad1f97ca6d17b8 refs/remotes/origin/stable
+  f5e36d156dc33a6c01c69c19efc2b5b0450496f6 refs/tags/copyright_update
+  915557b7dd8426f526a99ac08adf8d1f8188bda1 refs/tags/v19.0.0.0
+Only in gem5/site_scons/gem5_scons/builders: __pycache__
+Only in gem5/site_scons/gem5_scons: __pycache__
+Only in gem5/site_scons: __pycache__
+Only in gem5/site_scons/site_tools: __pycache__
+Only in gem5/src/arch/isa_parser: parser.out
+Only in gem5/src/arch/isa_parser: parsetab.py
+Only in gem5/src/arch/isa_parser: __pycache__
+Only in gem5/src/arch: parser.out
+Only in gem5/src/arch: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/arithmetic: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/compare_and_test: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/control_transfer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/data_conversion: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/data_transfer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/flags: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/input_output: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/rotate_and_shift: __pycache__
+Only in gem5/src/arch/x86/isa/insts/general_purpose/string: __pycache__
+Only in gem5/src/arch/x86/isa/insts: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point/arithmetic: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point/compare: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point/data_conversion: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point/data_reordering: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point/data_transfer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point/logical: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/floating_point: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/arithmetic: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/compare: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/data_conversion: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/data_reordering: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/data_transfer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/logical: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/save_and_restore_state: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128/integer/shift: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd128: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/floating_point/arithmetic: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/floating_point/compare: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/floating_point: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer/arithmetic: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer/compare: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer/data_reordering: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer/data_transfer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer/logical: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64/integer/shift: __pycache__
+Only in gem5/src/arch/x86/isa/insts/simd64: __pycache__
+Only in gem5/src/arch/x86/isa/insts/system: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/arithmetic: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/compare_and_test: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/control: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/data_transfer_and_conversion: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/load_constants: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/stack_management: __pycache__
+Only in gem5/src/arch/x86/isa/insts/x87/transcendental_functions: __pycache__
+diff -crB Validation/gem5/src/cpu/BaseCPU.py gem5/src/cpu/BaseCPU.py
+*** Validation/gem5/src/cpu/BaseCPU.py	2023-04-10 21:10:03.220195631 +0530
+--- gem5/src/cpu/BaseCPU.py	2023-02-21 11:14:30.022844629 +0530
+***************
+*** 48,53 ****
+--- 48,54 ----
+  
+  from m5.objects.ClockedObject import ClockedObject
+  from m5.objects.XBar import L2XBar
++ from m5.objects.XBar import L3XBar
+  from m5.objects.InstTracer import InstTracer
+  from m5.objects.CPUTracers import ExeTracer
+  from m5.objects.SubSystem import SubSystem
+***************
+*** 220,225 ****
+--- 221,236 ----
+          self.toL2Bus.mem_side_ports = self.l2cache.cpu_side
+          self._cached_ports = ["l2cache.mem_side"]
+  
++     def addThreeLevelCacheHierarchy(
++     self, ic, dc, l3c, iwc = None, dwc = None
++     ):
++         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
++         self.toL3Bus = xbar if xbar else L3XBar()
++         self.connectCachedPorts(self.toL3Bus.cpu_side_ports)
++         self.l3cache = l3c
++         self.toL3Bus.mem_side_ports = self.l3cache.cpu_side
++         self._cached_ports = ['l3cache.mem_side']
++ 
+      def createThreads(self):
+          # If no ISAs have been created, assume that the user wants the
+          # default ISA.
+diff -crB Validation/gem5/src/cpu/o3/FuncUnitConfig.py gem5/src/cpu/o3/FuncUnitConfig.py
+*** Validation/gem5/src/cpu/o3/FuncUnitConfig.py	2023-04-10 21:10:03.224195576 +0530
+--- gem5/src/cpu/o3/FuncUnitConfig.py	2023-02-20 13:47:22.145334486 +0530
+***************
+*** 44,57 ****
+  
+  
+  class IntALU(FUDesc):
+!     opList = [OpDesc(opClass="IntAlu")]
+!     count = 6
+  
+  
+  class IntMultDiv(FUDesc):
+      opList = [
+!         OpDesc(opClass="IntMult", opLat=3),
+!         OpDesc(opClass="IntDiv", opLat=20, pipelined=False),
+      ]
+  
+      count = 2
+--- 44,57 ----
+  
+  
+  class IntALU(FUDesc):
+!     opList = [OpDesc(opClass="IntAlu", opLat=2,pipelined=False)]
+!     count = 2
+  
+  
+  class IntMultDiv(FUDesc):
+      opList = [
+!         OpDesc(opClass="IntMult", opLat=2,pipelined=False),
+!         OpDesc(opClass="IntDiv", opLat=2, pipelined=False),
+      ]
+  
+      count = 2
+***************
+*** 59,112 ****
+  
+  class FP_ALU(FUDesc):
+      opList = [
+!         OpDesc(opClass="FloatAdd", opLat=2),
+!         OpDesc(opClass="FloatCmp", opLat=2),
+!         OpDesc(opClass="FloatCvt", opLat=2),
+      ]
+!     count = 4
+  
+  
+  class FP_MultDiv(FUDesc):
+      opList = [
+!         OpDesc(opClass="FloatMult", opLat=4),
+!         OpDesc(opClass="FloatMultAcc", opLat=5),
+!         OpDesc(opClass="FloatMisc", opLat=3),
+!         OpDesc(opClass="FloatDiv", opLat=12, pipelined=False),
+!         OpDesc(opClass="FloatSqrt", opLat=24, pipelined=False),
+      ]
+      count = 2
+  
+  
+  class SIMD_Unit(FUDesc):
+      opList = [
+!         OpDesc(opClass="SimdAdd"),
+!         OpDesc(opClass="SimdAddAcc"),
+!         OpDesc(opClass="SimdAlu"),
+!         OpDesc(opClass="SimdCmp"),
+!         OpDesc(opClass="SimdCvt"),
+!         OpDesc(opClass="SimdMisc"),
+!         OpDesc(opClass="SimdMult"),
+!         OpDesc(opClass="SimdMultAcc"),
+!         OpDesc(opClass="SimdShift"),
+!         OpDesc(opClass="SimdShiftAcc"),
+!         OpDesc(opClass="SimdDiv"),
+!         OpDesc(opClass="SimdSqrt"),
+!         OpDesc(opClass="SimdFloatAdd"),
+!         OpDesc(opClass="SimdFloatAlu"),
+!         OpDesc(opClass="SimdFloatCmp"),
+!         OpDesc(opClass="SimdFloatCvt"),
+!         OpDesc(opClass="SimdFloatDiv"),
+!         OpDesc(opClass="SimdFloatMisc"),
+!         OpDesc(opClass="SimdFloatMult"),
+!         OpDesc(opClass="SimdFloatMultAcc"),
+!         OpDesc(opClass="SimdFloatSqrt"),
+!         OpDesc(opClass="SimdReduceAdd"),
+!         OpDesc(opClass="SimdReduceAlu"),
+!         OpDesc(opClass="SimdReduceCmp"),
+!         OpDesc(opClass="SimdFloatReduceAdd"),
+!         OpDesc(opClass="SimdFloatReduceCmp"),
+      ]
+!     count = 4
+  
+  
+  class PredALU(FUDesc):
+--- 59,112 ----
+  
+  class FP_ALU(FUDesc):
+      opList = [
+!         OpDesc(opClass="FloatAdd", opLat=2,pipelined=False),
+!         OpDesc(opClass="FloatCmp", opLat=2,pipelined=False),
+!         OpDesc(opClass="FloatCvt", opLat=2,pipelined=False),
+      ]
+!     count = 2
+  
+  
+  class FP_MultDiv(FUDesc):
+      opList = [
+!         OpDesc(opClass="FloatMult", opLat=2,pipelined=False),
+!         OpDesc(opClass="FloatMultAcc", opLat=2,pipelined=False),
+!         OpDesc(opClass="FloatMisc", opLat=2,pipelined=False),
+!         OpDesc(opClass="FloatDiv", opLat=2, pipelined=False),
+!         OpDesc(opClass="FloatSqrt", opLat=2, pipelined=False),
+      ]
+      count = 2
+  
+  
+  class SIMD_Unit(FUDesc):
+      opList = [
+!         OpDesc(opClass="SimdAdd",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdAddAcc",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdAlu",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdCmp",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdCvt",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdMisc",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdMult",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdMultAcc",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdShift",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdShiftAcc",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdDiv",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdSqrt",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatAdd",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatAlu",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatCmp",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatCvt",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatDiv",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatMisc",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatMult",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatMultAcc",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatSqrt",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdReduceAdd",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdReduceAlu",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdReduceCmp",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatReduceAdd",opLat=2,pipelined=False),
+!         OpDesc(opClass="SimdFloatReduceCmp",opLat=2,pipelined=False),
+      ]
+!     count = 2
+  
+  
+  class PredALU(FUDesc):
+diff -crB Validation/gem5/src/mem/cache/Cache.py gem5/src/mem/cache/Cache.py
+*** Validation/gem5/src/mem/cache/Cache.py	2023-04-10 21:10:03.280194806 +0530
+--- gem5/src/mem/cache/Cache.py	2023-03-30 17:27:43.285061606 +0530
+***************
+*** 116,122 ****
+  
+      tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
+      replacement_policy = Param.BaseReplacementPolicy(
+!         LRURP(), "Replacement policy"
+      )
+  
+      compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
+--- 116,122 ----
+  
+      tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
+      replacement_policy = Param.BaseReplacementPolicy(
+!         FIFORP(), "Replacement policy"
+      )
+  
+      compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
+Only in gem5/src/mem/slicc/ast: __pycache__
+Only in gem5/src/mem/slicc/generate: __pycache__
+Only in gem5/src/mem/slicc: parser.out
+Only in gem5/src/mem/slicc: parsetab.py
+Only in gem5/src/mem/slicc: __pycache__
+Only in gem5/src/mem/slicc/symbols: __pycache__
+diff -crB Validation/gem5/src/mem/XBar.py gem5/src/mem/XBar.py
+*** Validation/gem5/src/mem/XBar.py	2023-04-10 21:10:03.280194806 +0530
+--- gem5/src/mem/XBar.py	2023-02-19 19:43:30.309953076 +0530
+***************
+*** 180,185 ****
+--- 180,194 ----
+      point_of_unification = True
+  
+  
++ class L3XBar(CoherentXBar):
++     width = 32
++     frontend_latency = 1
++     forward_latency = 0
++     response_latency = 1
++     snoop_response_latency = 1
++     snoop_filter = SnoopFilter(lookup_latency = 0)
++     point_of_unification = True
++ 
+  # One of the key coherent crossbar instances is the system
+  # interconnect, tying together the CPU clusters, GPUs, and any I/O
+  # coherent requestors, and DRAM controllers.
+Only in gem5/src/python/m5: __pycache__
+Only in gem5/src/python/m5/util: __pycache__
+Only in Validation/gem5/tests: compiler-tests.sh
