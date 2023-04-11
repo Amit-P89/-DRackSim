@@ -1,0 +1,215 @@
+diff new/DRAMSim2/BusPacket.cpp DRAMSim2/BusPacket.cpp
+48c48
+< BusPacket::BusPacket(BusPacketType packtype, uint64_t physicalAddr, 
+---
+> BusPacket::BusPacket(uint64_t nid, uint64_t tid, uint64_t s_cycle, uint64_t m_cycle, BusPacketType packtype, uint64_t physicalAddr, 
+58c58,62
+< 	data(dat)
+---
+> 	data(dat),
+> 	node_id(nid),
+> 	trans_id(tid),
+> 	start_cycle(s_cycle),
+> 	miss_cycle(m_cycle)
+diff new/DRAMSim2/BusPacket.h DRAMSim2/BusPacket.h
+66a67,70
+> 	uint64_t node_id;
+> 	uint64_t trans_id;
+> 	uint64_t start_cycle;
+> 	uint64_t miss_cycle;
+69c73
+< 	BusPacket(BusPacketType packtype, uint64_t physicalAddr, unsigned col, unsigned rw, unsigned r, unsigned b, void *dat, ostream &dramsim_log_);
+---
+> 	BusPacket(uint64_t nid, uint64_t tid, uint64_t s_cycle, uint64_t m_cycle, BusPacketType packtype, uint64_t physicalAddr, unsigned col, unsigned rw, unsigned r, unsigned b, void *dat, ostream &dramsim_log_);
+diff new/DRAMSim2/Callback.h DRAMSim2/Callback.h
+42c42
+< typename Param3T>
+---
+> typename Param3T, typename Param4T, typename Param5T, typename Param6T, typename Param7T, typename Param8T>
+47c47
+< 	virtual ReturnT operator()(Param1T, Param2T, Param3T) = 0;
+---
+> 	virtual ReturnT operator()(Param1T, Param2T, Param3T, Param4T, Param5T, Param6T, Param7T, Param8T) = 0;
+50,51c50,51
+< template <typename Return, typename Param1T, typename Param2T, typename Param3T>
+< DRAMSim::CallbackBase<Return,Param1T,Param2T,Param3T>::~CallbackBase() {}
+---
+> template <typename Return, typename Param1T, typename Param2T, typename Param3T, typename Param4T, typename Param5T, typename Param6T, typename Param7T, typename Param8T>
+> DRAMSim::CallbackBase<Return,Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T, Param8T>::~CallbackBase() {}
+54,55c54,55
+< typename Param1T, typename Param2T, typename Param3T >
+< class Callback: public CallbackBase<ReturnT,Param1T,Param2T,Param3T>
+---
+> typename Param1T, typename Param2T, typename Param3T, typename Param4T, typename Param5T, typename Param6T, typename Param7T, typename Param8T >
+> class Callback: public CallbackBase<ReturnT,Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T,Param8T>
+58c58
+< 	typedef ReturnT (ConsumerT::*PtrMember)(Param1T,Param2T,Param3T);
+---
+> 	typedef ReturnT (ConsumerT::*PtrMember)(Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T,Param8T);
+66c66
+< 	Callback( const Callback<ConsumerT,ReturnT,Param1T,Param2T,Param3T>& e ) :
+---
+> 	Callback( const Callback<ConsumerT,ReturnT,Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T,Param8T>& e ) :
+71c71
+< 	ReturnT operator()(Param1T param1, Param2T param2, Param3T param3)
+---
+> 	ReturnT operator()(Param1T param1, Param2T param2, Param3T param3, Param4T param4, Param5T param5, Param6T param6, Param7T param7, Param8T param8)
+74c74
+< 		       (param1,param2,param3);
+---
+> 		       (param1,param2,param3,param4,param5,param6,param7,param8);
+83c83
+< typedef CallbackBase <void, unsigned, uint64_t, uint64_t> TransactionCompleteCB;
+---
+> typedef CallbackBase <void, int, uint64_t, uint64_t, uint64_t, int, unsigned, uint64_t, uint64_t> TransactionCompleteCB;
+diff new/DRAMSim2/CommandQueue.cpp DRAMSim2/CommandQueue.cpp
+244c244
+< 				*busPacket = new BusPacket(REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+---
+> 				*busPacket = new BusPacket(0, 0, 0, 0, REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+378c378
+< 						*busPacket = new BusPacket(PRECHARGE, 0, 0, 0, refreshRank, b, 0, dramsim_log);
+---
+> 						*busPacket = new BusPacket(0, 0, 0, 0, PRECHARGE, 0, 0, 0, refreshRank, b, 0, dramsim_log);
+397c397
+< 				*busPacket = new BusPacket(REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+---
+> 				*busPacket = new BusPacket(0, 0, 0, 0, REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+519c519
+< 								*busPacket = new BusPacket(PRECHARGE, 0, 0, 0, nextRankPRE, nextBankPRE, 0, dramsim_log);
+---
+> 								*busPacket = new BusPacket(0, 0, 0, 0, PRECHARGE, 0, 0, 0, nextRankPRE, nextBankPRE, 0, dramsim_log);
+Common subdirectories: new/DRAMSim2/docs and DRAMSim2/docs
+diff new/DRAMSim2/DRAMSim.h DRAMSim2/DRAMSim.h
+47c47
+< 			bool addTransaction(bool isWrite, uint64_t addr);
+---
+> 			bool addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle);
+64c64
+< 	MultiChannelMemorySystem *getMemorySystemInstance(const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, std::string *visfilename=NULL);
+---
+> 	MultiChannelMemorySystem *getMemorySystemInstance(int mem_id, const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, std::string *visfilename=NULL);
+Common subdirectories: new/DRAMSim2/example_app and DRAMSim2/example_app
+Common subdirectories: new/DRAMSim2/ini and DRAMSim2/ini
+diff new/DRAMSim2/MemoryController.cpp DRAMSim2/MemoryController.cpp
+130c130
+< 	returnTransaction.push_back(new Transaction(RETURN_DATA, bpacket->physicalAddress, bpacket->data));
+---
+> 	returnTransaction.push_back(new Transaction(RETURN_DATA, bpacket->physicalAddress, bpacket->data, bpacket->node_id, bpacket->trans_id, bpacket->start_cycle, bpacket->miss_cycle));
+142c142
+< 		(*parentMemorySystem->ReturnReadData)(parentMemorySystem->systemID, trans->address, currentClockCycle);
+---
+> 		(*parentMemorySystem->ReturnReadData)(trans->node_id,trans->trans_id,trans->start_cycle,trans->miss_cycle,parentMemorySystem->mem_id,parentMemorySystem->systemID, trans->address, currentClockCycle);
+214c214
+< 				(*parentMemorySystem->WriteDataDone)(parentMemorySystem->systemID,outgoingDataPacket->physicalAddress, currentClockCycle);
+---
+> 				(*parentMemorySystem->WriteDataDone)(outgoingDataPacket->node_id,outgoingDataPacket->trans_id,outgoingDataPacket->start_cycle,outgoingDataPacket->miss_cycle,parentMemorySystem->mem_id,parentMemorySystem->systemID,outgoingDataPacket->physicalAddress, currentClockCycle);
+289c289
+< 			writeDataToSend.push_back(new BusPacket(DATA, poppedBusPacket->physicalAddress, poppedBusPacket->column,
+---
+> 			writeDataToSend.push_back(new BusPacket(poppedBusPacket->node_id, poppedBusPacket->trans_id, poppedBusPacket->start_cycle, poppedBusPacket->miss_cycle, DATA, poppedBusPacket->physicalAddress, poppedBusPacket->column,
+533c533
+< 			BusPacket *ACTcommand = new BusPacket(ACTIVATE, transaction->address,
+---
+> 			BusPacket *ACTcommand = new BusPacket(transaction->node_id, transaction->trans_id, transaction->start_cycle, transaction->miss_cycle, ACTIVATE, transaction->address,
+539c539
+< 			BusPacket *command = new BusPacket(bpType, transaction->address,
+---
+> 			BusPacket *command = new BusPacket(transaction->node_id, transaction->trans_id, transaction->start_cycle, transaction->miss_cycle, bpType, transaction->address,
+846a847
+> 	PRINT( " ========================"<<parentMemorySystem->mem_id<<"===============================" );
+diff new/DRAMSim2/MemorySystem.cpp DRAMSim2/MemorySystem.cpp
+56c56
+< MemorySystem::MemorySystem(unsigned id, unsigned int megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_) :
+---
+> MemorySystem::MemorySystem(int mem_id_, unsigned id, unsigned int megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_) :
+60a61
+> 		mem_id(mem_id_),
+179c180
+< bool MemorySystem::addTransaction(bool isWrite, uint64_t addr)
+---
+> bool MemorySystem::addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle)
+182c183
+< 	Transaction *trans = new Transaction(type,addr,NULL);
+---
+> 	Transaction *trans = new Transaction(type,addr,NULL,nid,tid,start_cycle,miss_cycle);
+diff new/DRAMSim2/MemorySystem.h DRAMSim2/MemorySystem.h
+52c52
+< typedef CallbackBase<void,unsigned,uint64_t,uint64_t> Callback_t;
+---
+> typedef CallbackBase<void,int,uint64_t,uint64_t,uint64_t,int,unsigned,uint64_t,uint64_t> Callback_t;
+58c58
+< 	MemorySystem(unsigned id, unsigned megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_);
+---
+> 	MemorySystem(int mem_id_, unsigned id, unsigned megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_);
+62c62
+< 	bool addTransaction(bool isWrite, uint64_t addr);
+---
+> 	bool addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle);
+81a82
+> 	int mem_id;
+diff new/DRAMSim2/MultiChannelMemorySystem.cpp DRAMSim2/MultiChannelMemorySystem.cpp
+46,47c46,47
+< MultiChannelMemorySystem::MultiChannelMemorySystem(const string &deviceIniFilename_, const string &systemIniFilename_, const string &pwd_, const string &traceFilename_, unsigned megsOfMemory_, string *visFilename_, const IniReader::OverrideMap *paramOverrides)
+< 	:megsOfMemory(megsOfMemory_), deviceIniFilename(deviceIniFilename_),
+---
+> MultiChannelMemorySystem::MultiChannelMemorySystem(int mem_id_, const string &deviceIniFilename_, const string &systemIniFilename_, const string &pwd_, const string &traceFilename_, unsigned megsOfMemory_, string *visFilename_, const IniReader::OverrideMap *paramOverrides)
+> 	:mem_id(mem_id_), megsOfMemory(megsOfMemory_), deviceIniFilename(deviceIniFilename_),
+99c99
+< 		MemorySystem *channel = new MemorySystem(i, megsOfMemory/NUM_CHANS, (*csvOut), dramsim_log);
+---
+> 		MemorySystem *channel = new MemorySystem(mem_id, i, megsOfMemory/NUM_CHANS, (*csvOut), dramsim_log);
+444c444
+< bool MultiChannelMemorySystem::addTransaction(bool isWrite, uint64_t addr)
+---
+> bool MultiChannelMemorySystem::addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle)
+447c447
+< 	return channels[channelNumber]->addTransaction(isWrite, addr); 
+---
+> 	return channels[channelNumber]->addTransaction(isWrite, addr, nid, tid, start_cycle, miss_cycle); 
+535c535
+< MultiChannelMemorySystem *getMemorySystemInstance(const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visfilename) 
+---
+> MultiChannelMemorySystem *getMemorySystemInstance(int mem_id, const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visfilename) 
+537c537
+< 	return new MultiChannelMemorySystem(dev, sys, pwd, trc, megsOfMemory, visfilename);
+---
+> 	return new MultiChannelMemorySystem(mem_id, dev, sys, pwd, trc, megsOfMemory, visfilename);
+diff new/DRAMSim2/MultiChannelMemorySystem.h DRAMSim2/MultiChannelMemorySystem.h
+46c46
+< 	MultiChannelMemorySystem(const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visFilename=NULL, const IniReader::OverrideMap *paramOverrides=NULL);
+---
+> 	MultiChannelMemorySystem(int mem_id, const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visFilename=NULL, const IniReader::OverrideMap *paramOverrides=NULL);
+50c50
+< 			bool addTransaction(bool isWrite, uint64_t addr);
+---
+> 			bool addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle);
+75a76
+> 		int mem_id;
+Only in DRAMSim2: results
+Only in DRAMSim2: system.ini
+Only in new/DRAMSim2: system.ini.example
+Common subdirectories: new/DRAMSim2/traces and DRAMSim2/traces
+diff new/DRAMSim2/Transaction.cpp DRAMSim2/Transaction.cpp
+46c46
+< Transaction::Transaction(TransactionType transType, uint64_t addr, void *dat) :
+---
+> Transaction::Transaction(TransactionType transType, uint64_t addr, void *dat, uint64_t nid, uint64_t tid, uint64_t s_cycle, uint64_t m_cycle) :
+49c49,53
+< 	data(dat)
+---
+> 	data(dat),
+> 	node_id(nid),
+> 	trans_id(tid),
+> 	start_cycle(s_cycle),
+> 	miss_cycle(m_cycle)
+diff new/DRAMSim2/Transaction.h DRAMSim2/Transaction.h
+59a60,63
+> 	uint64_t node_id;
+> 	uint64_t trans_id;
+> 	uint64_t start_cycle;
+> 	uint64_t miss_cycle;
+66c70
+< 	Transaction(TransactionType transType, uint64_t addr, void *data);
+---
+> 	Transaction(TransactionType transType, uint64_t addr, void *data, uint64_t node_id, uint64_t trans_id, uint64_t start_cycle, uint64_t miss_cycle);
