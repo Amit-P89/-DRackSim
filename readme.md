@@ -2,10 +2,10 @@
 * Download Intel pin-3.20-98437-gf02b61307-gcc-linux.tar.gz from https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-instrumentation-tool-downloads.html
 
 #Detailed Cycle-Level Simulation model of DRACKSim:
-* Go in directory DRACKSim-Detailed and follow the instructions in readme.me file
+* Go in directory DRACKSim-Detailed and follow the instructions in readme.md file
 	
 #Traced-based Simulation model of DRACKSim:
-* Go in directory DRackSim-Trace and follow the instructions in readme.me file
+* Go in directory DRackSim-Trace and follow the instructions in readme.md file
 
 
 #For validation of DRACKSim-Detailed with gem5:
