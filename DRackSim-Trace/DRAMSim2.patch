@@ -1,0 +1,923 @@
+diff -crB new/DRAMSim2/BusPacket.cpp DRAMSim2/BusPacket.cpp
+*** new/DRAMSim2/BusPacket.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/BusPacket.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 45,51 ****
+  using namespace DRAMSim;
+  using namespace std;
+  
+! BusPacket::BusPacket(BusPacketType packtype, uint64_t physicalAddr, 
+  		unsigned col, unsigned rw, unsigned r, unsigned b, void *dat, 
+  		ostream &dramsim_log_) :
+  	dramsim_log(dramsim_log_),
+--- 45,51 ----
+  using namespace DRAMSim;
+  using namespace std;
+  
+! BusPacket::BusPacket(uint64_t nid, uint64_t tid, uint64_t s_cycle, uint64_t m_cycle, BusPacketType packtype, uint64_t physicalAddr, 
+  		unsigned col, unsigned rw, unsigned r, unsigned b, void *dat, 
+  		ostream &dramsim_log_) :
+  	dramsim_log(dramsim_log_),
+***************
+*** 55,61 ****
+  	bank(b),
+  	rank(r),
+  	physicalAddress(physicalAddr),
+! 	data(dat)
+  {}
+  
+  void BusPacket::print(uint64_t currentClockCycle, bool dataStart)
+--- 55,65 ----
+  	bank(b),
+  	rank(r),
+  	physicalAddress(physicalAddr),
+! 	data(dat),
+! 	node_id(nid),
+! 	trans_id(tid),
+! 	start_cycle(s_cycle),
+! 	miss_cycle(m_cycle)
+  {}
+  
+  void BusPacket::print(uint64_t currentClockCycle, bool dataStart)
+diff -crB new/DRAMSim2/BusPacket.h DRAMSim2/BusPacket.h
+*** new/DRAMSim2/BusPacket.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/BusPacket.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 64,72 ****
+  	unsigned rank;
+  	uint64_t physicalAddress;
+  	void *data;
+  
+  	//Functions
+! 	BusPacket(BusPacketType packtype, uint64_t physicalAddr, unsigned col, unsigned rw, unsigned r, unsigned b, void *dat, ostream &dramsim_log_);
+  
+  	void print();
+  	void print(uint64_t currentClockCycle, bool dataStart);
+--- 64,76 ----
+  	unsigned rank;
+  	uint64_t physicalAddress;
+  	void *data;
++ 	uint64_t node_id;
++ 	uint64_t trans_id;
++ 	uint64_t start_cycle;
++ 	uint64_t miss_cycle;
+  
+  	//Functions
+! 	BusPacket(uint64_t nid, uint64_t tid, uint64_t s_cycle, uint64_t m_cycle, BusPacketType packtype, uint64_t physicalAddr, unsigned col, unsigned rw, unsigned r, unsigned b, void *dat, ostream &dramsim_log_);
+  
+  	void print();
+  	void print(uint64_t currentClockCycle, bool dataStart);
+diff -crB new/DRAMSim2/Callback.h DRAMSim2/Callback.h
+*** new/DRAMSim2/Callback.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/Callback.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 39,61 ****
+  {
+  
+  template <typename ReturnT, typename Param1T, typename Param2T,
+! typename Param3T>
+  class CallbackBase
+  {
+  public:
+  	virtual ~CallbackBase() = 0;
+! 	virtual ReturnT operator()(Param1T, Param2T, Param3T) = 0;
+  };
+  
+! template <typename Return, typename Param1T, typename Param2T, typename Param3T>
+! DRAMSim::CallbackBase<Return,Param1T,Param2T,Param3T>::~CallbackBase() {}
+  
+  template <typename ConsumerT, typename ReturnT,
+! typename Param1T, typename Param2T, typename Param3T >
+! class Callback: public CallbackBase<ReturnT,Param1T,Param2T,Param3T>
+  {
+  private:
+! 	typedef ReturnT (ConsumerT::*PtrMember)(Param1T,Param2T,Param3T);
+  
+  public:
+  	Callback( ConsumerT* const object, PtrMember member) :
+--- 39,61 ----
+  {
+  
+  template <typename ReturnT, typename Param1T, typename Param2T,
+! typename Param3T, typename Param4T, typename Param5T, typename Param6T, typename Param7T, typename Param8T>
+  class CallbackBase
+  {
+  public:
+  	virtual ~CallbackBase() = 0;
+! 	virtual ReturnT operator()(Param1T, Param2T, Param3T, Param4T, Param5T, Param6T, Param7T, Param8T) = 0;
+  };
+  
+! template <typename Return, typename Param1T, typename Param2T, typename Param3T, typename Param4T, typename Param5T, typename Param6T, typename Param7T, typename Param8T>
+! DRAMSim::CallbackBase<Return,Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T, Param8T>::~CallbackBase() {}
+  
+  template <typename ConsumerT, typename ReturnT,
+! typename Param1T, typename Param2T, typename Param3T, typename Param4T, typename Param5T, typename Param6T, typename Param7T, typename Param8T >
+! class Callback: public CallbackBase<ReturnT,Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T,Param8T>
+  {
+  private:
+! 	typedef ReturnT (ConsumerT::*PtrMember)(Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T,Param8T);
+  
+  public:
+  	Callback( ConsumerT* const object, PtrMember member) :
+***************
+*** 63,77 ****
+  	{
+  	}
+  
+! 	Callback( const Callback<ConsumerT,ReturnT,Param1T,Param2T,Param3T>& e ) :
+  			object(e.object), member(e.member)
+  	{
+  	}
+  
+! 	ReturnT operator()(Param1T param1, Param2T param2, Param3T param3)
+  	{
+  		return (const_cast<ConsumerT*>(object)->*member)
+! 		       (param1,param2,param3);
+  	}
+  
+  private:
+--- 63,77 ----
+  	{
+  	}
+  
+! 	Callback( const Callback<ConsumerT,ReturnT,Param1T,Param2T,Param3T,Param4T,Param5T,Param6T,Param7T,Param8T>& e ) :
+  			object(e.object), member(e.member)
+  	{
+  	}
+  
+! 	ReturnT operator()(Param1T param1, Param2T param2, Param3T param3, Param4T param4, Param5T param5, Param6T param6, Param7T param7, Param8T param8)
+  	{
+  		return (const_cast<ConsumerT*>(object)->*member)
+! 		       (param1,param2,param3,param4,param5,param6,param7,param8);
+  	}
+  
+  private:
+***************
+*** 80,86 ****
+  	const PtrMember  member;
+  };
+  
+! typedef CallbackBase <void, unsigned, uint64_t, uint64_t> TransactionCompleteCB;
+  } // namespace DRAMSim
+  
+  #endif
+--- 80,86 ----
+  	const PtrMember  member;
+  };
+  
+! typedef CallbackBase <void, int, uint64_t, uint64_t, uint64_t, int, unsigned, uint64_t, uint64_t> TransactionCompleteCB;
+  } // namespace DRAMSim
+  
+  #endif
+diff -crB new/DRAMSim2/CommandQueue.cpp DRAMSim2/CommandQueue.cpp
+*** new/DRAMSim2/CommandQueue.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/CommandQueue.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 241,247 ****
+  			//	reset flags and rank pointer
+  			if (!foundActiveOrTooEarly && bankStates[refreshRank][0].currentBankState != PowerDown)
+  			{
+! 				*busPacket = new BusPacket(REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+  				refreshRank = -1;
+  				refreshWaiting = false;
+  				sendingREF = true;
+--- 241,247 ----
+  			//	reset flags and rank pointer
+  			if (!foundActiveOrTooEarly && bankStates[refreshRank][0].currentBankState != PowerDown)
+  			{
+! 				*busPacket = new BusPacket(0, 0, 0, 0, REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+  				refreshRank = -1;
+  				refreshWaiting = false;
+  				sendingREF = true;
+***************
+*** 375,381 ****
+  					if (closeRow && currentClockCycle >= bankStates[refreshRank][b].nextPrecharge)
+  					{
+  						rowAccessCounters[refreshRank][b]=0;
+! 						*busPacket = new BusPacket(PRECHARGE, 0, 0, 0, refreshRank, b, 0, dramsim_log);
+  						sendingREForPRE = true;
+  					}
+  					break;
+--- 375,381 ----
+  					if (closeRow && currentClockCycle >= bankStates[refreshRank][b].nextPrecharge)
+  					{
+  						rowAccessCounters[refreshRank][b]=0;
+! 						*busPacket = new BusPacket(0, 0, 0, 0, PRECHARGE, 0, 0, 0, refreshRank, b, 0, dramsim_log);
+  						sendingREForPRE = true;
+  					}
+  					break;
+***************
+*** 394,400 ****
+  			//	reset flags and rank pointer
+  			if (sendREF && bankStates[refreshRank][0].currentBankState != PowerDown)
+  			{
+! 				*busPacket = new BusPacket(REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+  				refreshRank = -1;
+  				refreshWaiting = false;
+  				sendingREForPRE = true;
+--- 394,400 ----
+  			//	reset flags and rank pointer
+  			if (sendREF && bankStates[refreshRank][0].currentBankState != PowerDown)
+  			{
+! 				*busPacket = new BusPacket(0, 0, 0, 0, REFRESH, 0, 0, 0, refreshRank, 0, 0, dramsim_log);
+  				refreshRank = -1;
+  				refreshWaiting = false;
+  				sendingREForPRE = true;
+***************
+*** 516,522 ****
+  							{
+  								sendingPRE = true;
+  								rowAccessCounters[nextRankPRE][nextBankPRE] = 0;
+! 								*busPacket = new BusPacket(PRECHARGE, 0, 0, 0, nextRankPRE, nextBankPRE, 0, dramsim_log);
+  								break;
+  							}
+  						}
+--- 516,522 ----
+  							{
+  								sendingPRE = true;
+  								rowAccessCounters[nextRankPRE][nextBankPRE] = 0;
+! 								*busPacket = new BusPacket(0, 0, 0, 0, PRECHARGE, 0, 0, 0, nextRankPRE, nextBankPRE, 0, dramsim_log);
+  								break;
+  							}
+  						}
+diff -crB new/DRAMSim2/DRAMSim.h DRAMSim2/DRAMSim.h
+*** new/DRAMSim2/DRAMSim.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/DRAMSim.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 44,50 ****
+  
+  	class MultiChannelMemorySystem {
+  		public: 
+! 			bool addTransaction(bool isWrite, uint64_t addr);
+  			void setCPUClockSpeed(uint64_t cpuClkFreqHz);
+  			void update();
+  			void printStats(bool finalStats);
+--- 44,50 ----
+  
+  	class MultiChannelMemorySystem {
+  		public: 
+! 			bool addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle);
+  			void setCPUClockSpeed(uint64_t cpuClkFreqHz);
+  			void update();
+  			void printStats(bool finalStats);
+***************
+*** 61,67 ****
+  			int getIniUint64(const std::string &field, uint64_t *val);
+  			int getIniFloat(const std::string &field, float *val);
+  	};
+! 	MultiChannelMemorySystem *getMemorySystemInstance(const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, std::string *visfilename=NULL);
+  }
+  
+  #endif
+--- 61,67 ----
+  			int getIniUint64(const std::string &field, uint64_t *val);
+  			int getIniFloat(const std::string &field, float *val);
+  	};
+! 	MultiChannelMemorySystem *getMemorySystemInstance(int mem_id, const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, std::string *visfilename=NULL);
+  }
+  
+  #endif
+diff -crB new/DRAMSim2/example_app/dramsim_test.cpp DRAMSim2/example_app/dramsim_test.cpp
+*** new/DRAMSim2/example_app/dramsim_test.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/example_app/dramsim_test.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 36,50 ****
+  
+  using namespace DRAMSim;
+  
+  /* callback functors */
+! void some_object::read_complete(unsigned id, uint64_t address, uint64_t clock_cycle)
+  {
+! 	printf("[Callback] read complete: %d 0x%lx cycle=%lu\n", id, address, clock_cycle);
+  }
+  
+! void some_object::write_complete(unsigned id, uint64_t address, uint64_t clock_cycle)
+  {
+! 	printf("[Callback] write complete: %d 0x%lx cycle=%lu\n", id, address, clock_cycle);
+  }
+  
+  /* FIXME: this may be broken, currently */
+--- 36,56 ----
+  
+  using namespace DRAMSim;
+  
++ int x=0;
++ 
+  /* callback functors */
+! void some_object::read_complete(int nid, uint64_t tid, uint64_t sc, int mem_id, unsigned id, uint64_t address, uint64_t clock_cycle)
+  {
+! 	x++;
+! 	uint64_t diff=clock_cycle-sc;
+! 	printf("Mem_id: %d Trans_id: %ld node_id: %d [Callback] write complete: %d 0x%lx  diff=%ld \n", mem_id, tid, nid, id, address,diff);
+  }
+  
+! void some_object::write_complete(int nid, uint64_t tid, uint64_t sc, int mem_id, unsigned id, uint64_t address, uint64_t clock_cycle)
+  {
+! 	x++;
+! 	uint64_t diff=clock_cycle-sc;
+! 	printf("Mem_id: %d Trans_id: %ld node_id: %d [Callback] write complete: %d 0x%lx  diff=%ld \n", mem_id, tid, nid, id, address,diff);
+  }
+  
+  /* FIXME: this may be broken, currently */
+***************
+*** 53,102 ****
+  //	printf("power callback: %0.3f, %0.3f, %0.3f, %0.3f\n",a,b,c,d);
+  }
+  
+! int some_object::add_one_and_run(MultiChannelMemorySystem *mem, uint64_t addr)
+  {
+  
+! 	/* create a transaction and add it */
+  	bool isWrite = false; 
+! 	mem->addTransaction(isWrite, addr);
+  
+  	// send a read to channel 1 on the same cycle 
+  	addr = 1LL<<33 | addr; 
+- 	mem->addTransaction(isWrite, addr);
+  
+! 	for (int i=0; i<5; i++)
+  	{
+  		mem->update();
+  	}
+  
+! 	/* add another some time in the future */
+  
+  	// send a write to channel 0 
+! 	addr = 0x900012; 
+  	isWrite = true; 
+! 	mem->addTransaction(isWrite, addr);
+! 	
+  
+! 	/* do a bunch of updates (i.e. clocks) -- at some point the callback will fire */
+! 	for (int i=0; i<45; i++)
+  	{
+  		mem->update();
+  	}
+  
+! 	/* get a nice summary of this epoch */
+! 	mem->printStats(true);
+  
+  	return 0;
+  }
+  
+  int main()
+  {
+! 	some_object obj;
+! 	TransactionCompleteCB *read_cb = new Callback<some_object, void, unsigned, uint64_t, uint64_t>(&obj, &some_object::read_complete);
+! 	TransactionCompleteCB *write_cb = new Callback<some_object, void, unsigned, uint64_t, uint64_t>(&obj, &some_object::write_complete);
+  
+  	/* pick a DRAM part to simulate */
+! 	MultiChannelMemorySystem *mem = getMemorySystemInstance("ini/DDR2_micron_16M_8b_x8_sg3E.ini", "system.ini", "..", "example_app", 16384); 
+  
+  
+  	mem->RegisterCallbacks(read_cb, write_cb, power_callback);
+--- 59,125 ----
+  //	printf("power callback: %0.3f, %0.3f, %0.3f, %0.3f\n",a,b,c,d);
+  }
+  
+! 
+! int some_object::add_one_and_run(MultiChannelMemorySystem *mem, uint64_t addr, uint64_t tid, uint64_t sc, int nid)
+  {
++ //	int t=(tid-1)*4;
+  
+! 	//create a transaction and add it 
+  	bool isWrite = false; 
+! 	mem->addTransaction(isWrite, addr, nid, tid,sc);
+! 
+! /*	mem->addTransaction(isWrite, addr, nid, t+2,sc);
+  
+  	// send a read to channel 1 on the same cycle 
+  	addr = 1LL<<33 | addr; 
+  
+! 
+! 	for (int i=0; i<100; i++)
+  	{
+  		mem->update();
+  	}
+  
+! 	// add another some time in the future 
+  
+  	// send a write to channel 0 
+! 	addr = 0x9000c0; 
+  	isWrite = true; 
+! 	mem->addTransaction(isWrite, addr, nid, t+3,sc);
+! 
+! 	mem->addTransaction(isWrite, addr, nid, t+4,sc);
+! 
+  
+! 	for(int i=0;i<85;i++)
+! 	{
+! 		mem->update();
+! 	}
+! 	int cycle=-20;
+! 	 //do a bunch of updates (i.e. clocks) -- at some point the callback will fire 
+! 	for (int i=0; i<cycle; i++)
+  	{
+  		mem->update();
+  	}
+  
+! 	get a nice summary of this epoch
+! 	mem->printStats(true);*/
+  
+  	return 0;
+  }
+  
++ some_object obj;
++ 
++ TransactionCompleteCB *read_cb= new Callback<some_object, void, int, uint64_t, uint64_t, uint64_t, int, unsigned, uint64_t, uint64_t>(&obj, &some_object::read_complete);
++ TransactionCompleteCB *write_cb= new Callback<some_object, void, int, uint64_t, uint64_t, uint64_t, int, unsigned, uint64_t, uint64_t>(&obj, &some_object::write_complete);
++ MultiChannelMemorySystem *local_mem[3];
++ 
+  int main()
+  {
+! 	//some_object obj;
+! 	//TransactionCompleteCB *read_cb = new Callback<some_object, void, unsigned, uint64_t, uint64_t>(&obj, &some_object::read_complete);
+! 	//TransactionCompleteCB *write_cb = new Callback<some_object, void, unsigned, uint64_t, uint64_t>(&obj, &some_object::write_complete);
+  
+  	/* pick a DRAM part to simulate */
+! 	/*MultiChannelMemorySystem *mem = getMemorySystemInstance("ini/DDR3_micron_8M_8B_x16_sg15.ini", "system.ini", "..", "example_app", 16384); 
+  
+  
+  	mem->RegisterCallbacks(read_cb, write_cb, power_callback);
+***************
+*** 104,116 ****
+  
+  	mem2->RegisterCallbacks(read_cb, write_cb, power_callback);
+  
+  	printf("dramsim_test main()\n");
+  	printf("-----MEM1------\n");
+! 	obj.add_one_and_run(mem, 0x100001UL);
+! 	obj.add_one_and_run(mem, 0x200002UL);
+  
+- 	printf("-----MEM2------\n");
+- 	obj.add_one_and_run(mem2, 0x300002UL);
+  	return 0; 
+  }
+  
+--- 127,171 ----
+  
+  	mem2->RegisterCallbacks(read_cb, write_cb, power_callback);
+  
++ 	MultiChannelMemorySystem *mem3 = getMemorySystemInstance("ini/DDR2_micron_16M_8b_x8_sg3E.ini", "system.ini", "..", "example_app", 16384); 
++ 
++ 	mem3->RegisterCallbacks(read_cb, write_cb, power_callback);*/
++ 
++ for(int i=0;i<3;i++)
++ 	{
++ 		local_mem[i]= getMemorySystemInstance(i,"ini/DDR4_x16_2400.ini", "system.ini", "..", "example_app", 1024);
++ 		local_mem[i]->RegisterCallbacks(read_cb,write_cb,power_callback);	//DRAM simulator function
++ 	}	
++ 
++ 	//local_mem[0]->setCPUClockSpeed(2500000000);
++ 
+  	printf("dramsim_test main()\n");
+  	printf("-----MEM1------\n");
+! 	
+! //	for(int i=0;i<10000000;i++)
+! 	
+! 	for(int i=0;i<10;i++)
+! 		obj.add_one_and_run(local_mem[0], 0x200040UL, 1,1,1,1);
+! 	for(int i=0;i<500;i++)
+! 	{
+! 		local_mem[0]->update();
+! 	}	
+! 
+! //	obj.add_one_and_run(local_mem[1], 0x200040UL, 2,2,2);
+! 	//obj.add_one_and_run(local_mem[2], 0x200040UL, 1);
+! 
+! 	//printf("-----MEM2------\n");
+! 	//obj.add_one_and_run(local_mem[0], 0x2ffc0UL, 2);
+! 	//obj.add_one_and_run(local_mem[1], 0x2ffc0UL, 2);
+! 	//obj.add_one_and_run(local_mem[2], 0x2ffc0UL, 2);
+! 	
+! 	for(int i=0;i<10000;i++)
+! 	{
+! 		local_mem[0]->update();
+! 	}
+! 
+! 	printf("\ntotal mem access: %d", x);
+  
+  	return 0; 
+  }
+  
+diff -crB new/DRAMSim2/example_app/dramsim_test.h DRAMSim2/example_app/dramsim_test.h
+*** new/DRAMSim2/example_app/dramsim_test.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/example_app/dramsim_test.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 38,44 ****
+  class some_object
+  {
+  	public: 
+! 		void read_complete(unsigned, uint64_t, uint64_t);
+! 		void write_complete(unsigned, uint64_t, uint64_t);
+! 		int add_one_and_run(DRAMSim::MultiChannelMemorySystem *mem, uint64_t addr);
+  };
+--- 38,44 ----
+  class some_object
+  {
+  	public: 
+! 		void read_complete(int, uint64_t, uint64_t, uint64_t, int, unsigned, uint64_t, uint64_t);
+! 		void write_complete(int, uint64_t, uint64_t, uint64_t, int, unsigned, uint64_t, uint64_t);
+! 		int add_one_and_run(DRAMSim::MultiChannelMemorySystem *mem, uint64_t addr, bool isWrite, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle, int nid);
+  };
+Only in DRAMSim2/ini: DDR4_x16_2400_1.ini
+Only in DRAMSim2/ini: DDR4_x16_2400.ini
+diff -crB new/DRAMSim2/MemoryController.cpp DRAMSim2/MemoryController.cpp
+*** new/DRAMSim2/MemoryController.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/MemoryController.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 127,133 ****
+  	}
+  
+  	//add to return read data queue
+! 	returnTransaction.push_back(new Transaction(RETURN_DATA, bpacket->physicalAddress, bpacket->data));
+  	totalReadsPerBank[SEQUENTIAL(bpacket->rank,bpacket->bank)]++;
+  
+  	// this delete statement saves a mindboggling amount of memory
+--- 127,133 ----
+  	}
+  
+  	//add to return read data queue
+! 	returnTransaction.push_back(new Transaction(RETURN_DATA, bpacket->physicalAddress, bpacket->data, bpacket->node_id, bpacket->trans_id, bpacket->start_cycle, bpacket->miss_cycle));
+  	totalReadsPerBank[SEQUENTIAL(bpacket->rank,bpacket->bank)]++;
+  
+  	// this delete statement saves a mindboggling amount of memory
+***************
+*** 139,145 ****
+  {
+  	if (parentMemorySystem->ReturnReadData!=NULL)
+  	{
+! 		(*parentMemorySystem->ReturnReadData)(parentMemorySystem->systemID, trans->address, currentClockCycle);
+  	}
+  }
+  
+--- 139,145 ----
+  {
+  	if (parentMemorySystem->ReturnReadData!=NULL)
+  	{
+! 		(*parentMemorySystem->ReturnReadData)(trans->node_id,trans->trans_id,trans->start_cycle,trans->miss_cycle,parentMemorySystem->mem_id,parentMemorySystem->systemID, trans->address, currentClockCycle);
+  	}
+  }
+  
+***************
+*** 211,217 ****
+  			//inform upper levels that a write is done
+  			if (parentMemorySystem->WriteDataDone!=NULL)
+  			{
+! 				(*parentMemorySystem->WriteDataDone)(parentMemorySystem->systemID,outgoingDataPacket->physicalAddress, currentClockCycle);
+  			}
+  
+  			(*ranks)[outgoingDataPacket->rank]->receiveFromBus(outgoingDataPacket);
+--- 211,217 ----
+  			//inform upper levels that a write is done
+  			if (parentMemorySystem->WriteDataDone!=NULL)
+  			{
+! 				(*parentMemorySystem->WriteDataDone)(outgoingDataPacket->node_id,outgoingDataPacket->trans_id,outgoingDataPacket->start_cycle,outgoingDataPacket->miss_cycle,parentMemorySystem->mem_id,parentMemorySystem->systemID,outgoingDataPacket->physicalAddress, currentClockCycle);
+  			}
+  
+  			(*ranks)[outgoingDataPacket->rank]->receiveFromBus(outgoingDataPacket);
+***************
+*** 286,292 ****
+  		if (poppedBusPacket->busPacketType == WRITE || poppedBusPacket->busPacketType == WRITE_P)
+  		{
+  
+! 			writeDataToSend.push_back(new BusPacket(DATA, poppedBusPacket->physicalAddress, poppedBusPacket->column,
+  			                                    poppedBusPacket->row, poppedBusPacket->rank, poppedBusPacket->bank,
+  			                                    poppedBusPacket->data, dramsim_log));
+  			writeDataCountdown.push_back(WL);
+--- 286,292 ----
+  		if (poppedBusPacket->busPacketType == WRITE || poppedBusPacket->busPacketType == WRITE_P)
+  		{
+  
+! 			writeDataToSend.push_back(new BusPacket(poppedBusPacket->node_id, poppedBusPacket->trans_id, poppedBusPacket->start_cycle, poppedBusPacket->miss_cycle, DATA, poppedBusPacket->physicalAddress, poppedBusPacket->column,
+  			                                    poppedBusPacket->row, poppedBusPacket->rank, poppedBusPacket->bank,
+  			                                    poppedBusPacket->data, dramsim_log));
+  			writeDataCountdown.push_back(WL);
+***************
+*** 530,542 ****
+  			transactionQueue.erase(transactionQueue.begin()+i);
+  
+  			//create activate command to the row we just translated
+! 			BusPacket *ACTcommand = new BusPacket(ACTIVATE, transaction->address,
+  					newTransactionColumn, newTransactionRow, newTransactionRank,
+  					newTransactionBank, 0, dramsim_log);
+  
+  			//create read or write command and enqueue it
+  			BusPacketType bpType = transaction->getBusPacketType();
+! 			BusPacket *command = new BusPacket(bpType, transaction->address,
+  					newTransactionColumn, newTransactionRow, newTransactionRank,
+  					newTransactionBank, transaction->data, dramsim_log);
+  
+--- 530,542 ----
+  			transactionQueue.erase(transactionQueue.begin()+i);
+  
+  			//create activate command to the row we just translated
+! 			BusPacket *ACTcommand = new BusPacket(transaction->node_id, transaction->trans_id, transaction->start_cycle, transaction->miss_cycle, ACTIVATE, transaction->address,
+  					newTransactionColumn, newTransactionRow, newTransactionRank,
+  					newTransactionBank, 0, dramsim_log);
+  
+  			//create read or write command and enqueue it
+  			BusPacketType bpType = transaction->getBusPacketType();
+! 			BusPacket *command = new BusPacket(transaction->node_id, transaction->trans_id, transaction->start_cycle, transaction->miss_cycle, bpType, transaction->address,
+  					newTransactionColumn, newTransactionRow, newTransactionRank,
+  					newTransactionBank, transaction->data, dramsim_log);
+  
+***************
+*** 844,849 ****
+--- 844,850 ----
+  #endif
+  
+  	PRINT( " =======================================================" );
++ 	PRINT( " ========================"<<parentMemorySystem->mem_id<<"===============================" );
+  	PRINT( " ============== Printing Statistics [id:"<<parentMemorySystem->systemID<<"]==============" );
+  	PRINTN( "   Total Return Transactions : " << totalTransactions );
+  	PRINT( " ("<<totalBytesTransferred <<" bytes) aggregate average bandwidth "<<totalBandwidth<<"GB/s");
+diff -crB new/DRAMSim2/MemorySystem.cpp DRAMSim2/MemorySystem.cpp
+*** new/DRAMSim2/MemorySystem.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/MemorySystem.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 53,63 ****
+  
+  powerCallBack_t MemorySystem::ReportPower = NULL;
+  
+! MemorySystem::MemorySystem(unsigned id, unsigned int megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_) :
+  		dramsim_log(dramsim_log_),
+  		ReturnReadData(NULL),
+  		WriteDataDone(NULL),
+  		systemID(id),
+  		csvOut(csvOut_)
+  {
+  	currentClockCycle = 0;
+--- 53,64 ----
+  
+  powerCallBack_t MemorySystem::ReportPower = NULL;
+  
+! MemorySystem::MemorySystem(int mem_id_, unsigned id, unsigned int megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_) :
+  		dramsim_log(dramsim_log_),
+  		ReturnReadData(NULL),
+  		WriteDataDone(NULL),
+  		systemID(id),
++ 		mem_id(mem_id_),
+  		csvOut(csvOut_)
+  {
+  	currentClockCycle = 0;
+***************
+*** 176,185 ****
+  	return memoryController->WillAcceptTransaction();
+  }
+  
+! bool MemorySystem::addTransaction(bool isWrite, uint64_t addr)
+  {
+  	TransactionType type = isWrite ? DATA_WRITE : DATA_READ;
+! 	Transaction *trans = new Transaction(type,addr,NULL);
+  	// push_back in memoryController will make a copy of this during
+  	// addTransaction so it's kosher for the reference to be local 
+  
+--- 177,186 ----
+  	return memoryController->WillAcceptTransaction();
+  }
+  
+! bool MemorySystem::addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle)
+  {
+  	TransactionType type = isWrite ? DATA_WRITE : DATA_READ;
+! 	Transaction *trans = new Transaction(type,addr,NULL,nid,tid,start_cycle,miss_cycle);
+  	// push_back in memoryController will make a copy of this during
+  	// addTransaction so it's kosher for the reference to be local 
+  
+diff -crB new/DRAMSim2/MemorySystem.h DRAMSim2/MemorySystem.h
+*** new/DRAMSim2/MemorySystem.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/MemorySystem.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 49,65 ****
+  
+  namespace DRAMSim
+  {
+! typedef CallbackBase<void,unsigned,uint64_t,uint64_t> Callback_t;
+  class MemorySystem : public SimulatorObject
+  {
+  	ostream &dramsim_log;
+  public:
+  	//functions
+! 	MemorySystem(unsigned id, unsigned megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_);
+  	virtual ~MemorySystem();
+  	void update();
+  	bool addTransaction(Transaction *trans);
+! 	bool addTransaction(bool isWrite, uint64_t addr);
+  	void printStats(bool finalStats);
+  	bool WillAcceptTransaction();
+  	void RegisterCallbacks(
+--- 49,65 ----
+  
+  namespace DRAMSim
+  {
+! typedef CallbackBase<void,int,uint64_t,uint64_t,uint64_t,int,unsigned,uint64_t,uint64_t> Callback_t;
+  class MemorySystem : public SimulatorObject
+  {
+  	ostream &dramsim_log;
+  public:
+  	//functions
+! 	MemorySystem(int mem_id_, unsigned id, unsigned megsOfMemory, CSVWriter &csvOut_, ostream &dramsim_log_);
+  	virtual ~MemorySystem();
+  	void update();
+  	bool addTransaction(Transaction *trans);
+! 	bool addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle);
+  	void printStats(bool finalStats);
+  	bool WillAcceptTransaction();
+  	void RegisterCallbacks(
+***************
+*** 79,84 ****
+--- 79,85 ----
+  	//TODO: make this a functor as well?
+  	static powerCallBack_t ReportPower;
+  	unsigned systemID;
++ 	int mem_id;
+  
+  private:
+  	CSVWriter &csvOut;
+diff -crB new/DRAMSim2/MultiChannelMemorySystem.cpp DRAMSim2/MultiChannelMemorySystem.cpp
+*** new/DRAMSim2/MultiChannelMemorySystem.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/MultiChannelMemorySystem.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 43,50 ****
+  using namespace DRAMSim; 
+  
+  
+! MultiChannelMemorySystem::MultiChannelMemorySystem(const string &deviceIniFilename_, const string &systemIniFilename_, const string &pwd_, const string &traceFilename_, unsigned megsOfMemory_, string *visFilename_, const IniReader::OverrideMap *paramOverrides)
+! 	:megsOfMemory(megsOfMemory_), deviceIniFilename(deviceIniFilename_),
+  	systemIniFilename(systemIniFilename_), traceFilename(traceFilename_),
+  	pwd(pwd_), visFilename(visFilename_), 
+  	clockDomainCrosser(new ClockDomain::Callback<MultiChannelMemorySystem, void>(this, &MultiChannelMemorySystem::actual_update)),
+--- 43,50 ----
+  using namespace DRAMSim; 
+  
+  
+! MultiChannelMemorySystem::MultiChannelMemorySystem(int mem_id_, const string &deviceIniFilename_, const string &systemIniFilename_, const string &pwd_, const string &traceFilename_, unsigned megsOfMemory_, string *visFilename_, const IniReader::OverrideMap *paramOverrides)
+! 	:mem_id(mem_id_), megsOfMemory(megsOfMemory_), deviceIniFilename(deviceIniFilename_),
+  	systemIniFilename(systemIniFilename_), traceFilename(traceFilename_),
+  	pwd(pwd_), visFilename(visFilename_), 
+  	clockDomainCrosser(new ClockDomain::Callback<MultiChannelMemorySystem, void>(this, &MultiChannelMemorySystem::actual_update)),
+***************
+*** 96,102 ****
+  	}
+  	for (size_t i=0; i<NUM_CHANS; i++)
+  	{
+! 		MemorySystem *channel = new MemorySystem(i, megsOfMemory/NUM_CHANS, (*csvOut), dramsim_log);
+  		channels.push_back(channel);
+  	}
+  }
+--- 96,102 ----
+  	}
+  	for (size_t i=0; i<NUM_CHANS; i++)
+  	{
+! 		MemorySystem *channel = new MemorySystem(mem_id, i, megsOfMemory/NUM_CHANS, (*csvOut), dramsim_log);
+  		channels.push_back(channel);
+  	}
+  }
+***************
+*** 441,450 ****
+  	return channels[channelNumber]->addTransaction(trans); 
+  }
+  
+! bool MultiChannelMemorySystem::addTransaction(bool isWrite, uint64_t addr)
+  {
+  	unsigned channelNumber = findChannelNumber(addr); 
+! 	return channels[channelNumber]->addTransaction(isWrite, addr); 
+  }
+  
+  /*
+--- 441,450 ----
+  	return channels[channelNumber]->addTransaction(trans); 
+  }
+  
+! bool MultiChannelMemorySystem::addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle)
+  {
+  	unsigned channelNumber = findChannelNumber(addr); 
+! 	return channels[channelNumber]->addTransaction(isWrite, addr, nid, tid, start_cycle, miss_cycle); 
+  }
+  
+  /*
+***************
+*** 532,539 ****
+  }
+  
+  namespace DRAMSim {
+! MultiChannelMemorySystem *getMemorySystemInstance(const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visfilename) 
+  {
+! 	return new MultiChannelMemorySystem(dev, sys, pwd, trc, megsOfMemory, visfilename);
+  }
+  }
+--- 532,539 ----
+  }
+  
+  namespace DRAMSim {
+! MultiChannelMemorySystem *getMemorySystemInstance(int mem_id, const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visfilename) 
+  {
+! 	return new MultiChannelMemorySystem(mem_id, dev, sys, pwd, trc, megsOfMemory, visfilename);
+  }
+  }
+diff -crB new/DRAMSim2/MultiChannelMemorySystem.h DRAMSim2/MultiChannelMemorySystem.h
+*** new/DRAMSim2/MultiChannelMemorySystem.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/MultiChannelMemorySystem.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 43,53 ****
+  {
+  	public: 
+  
+! 	MultiChannelMemorySystem(const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visFilename=NULL, const IniReader::OverrideMap *paramOverrides=NULL);
+  		virtual ~MultiChannelMemorySystem();
+  			bool addTransaction(Transaction *trans);
+  			bool addTransaction(const Transaction &trans);
+! 			bool addTransaction(bool isWrite, uint64_t addr);
+  			bool willAcceptTransaction(); 
+  			bool willAcceptTransaction(uint64_t addr); 
+  			void update();
+--- 43,53 ----
+  {
+  	public: 
+  
+! 	MultiChannelMemorySystem(int mem_id, const string &dev, const string &sys, const string &pwd, const string &trc, unsigned megsOfMemory, string *visFilename=NULL, const IniReader::OverrideMap *paramOverrides=NULL);
+  		virtual ~MultiChannelMemorySystem();
+  			bool addTransaction(Transaction *trans);
+  			bool addTransaction(const Transaction &trans);
+! 			bool addTransaction(bool isWrite, uint64_t addr, uint64_t nid, uint64_t tid, uint64_t start_cycle, uint64_t miss_cycle);
+  			bool willAcceptTransaction(); 
+  			bool willAcceptTransaction(uint64_t addr); 
+  			void update();
+***************
+*** 73,78 ****
+--- 73,79 ----
+  		unsigned findChannelNumber(uint64_t addr);
+  		void actual_update(); 
+  		vector<MemorySystem*> channels; 
++ 		int mem_id;
+  		unsigned megsOfMemory; 
+  		string deviceIniFilename;
+  		string systemIniFilename;
+Only in DRAMSim2/: results
+Only in DRAMSim2/: system.ini
+diff -crB new/DRAMSim2/Transaction.cpp DRAMSim2/Transaction.cpp
+*** new/DRAMSim2/Transaction.cpp	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/Transaction.cpp	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 43,52 ****
+  
+  namespace DRAMSim {
+  
+! Transaction::Transaction(TransactionType transType, uint64_t addr, void *dat) :
+  	transactionType(transType),
+  	address(addr),
+! 	data(dat)
+  {}
+  
+  Transaction::Transaction(const Transaction &t)
+--- 43,56 ----
+  
+  namespace DRAMSim {
+  
+! Transaction::Transaction(TransactionType transType, uint64_t addr, void *dat, uint64_t nid, uint64_t tid, uint64_t s_cycle, uint64_t m_cycle) :
+  	transactionType(transType),
+  	address(addr),
+! 	data(dat),
+! 	node_id(nid),
+! 	trans_id(tid),
+! 	start_cycle(s_cycle),
+! 	miss_cycle(m_cycle)
+  {}
+  
+  Transaction::Transaction(const Transaction &t)
+diff -crB new/DRAMSim2/Transaction.h DRAMSim2/Transaction.h
+*** new/DRAMSim2/Transaction.h	2018-08-24 20:02:54.000000000 +0530
+--- DRAMSim2/Transaction.h	2023-04-25 15:59:39.387244370 +0530
+***************
+*** 57,69 ****
+  	TransactionType transactionType;
+  	uint64_t address;
+  	void *data;
+  	uint64_t timeAdded;
+  	uint64_t timeReturned;
+  
+  
+  	friend ostream &operator<<(ostream &os, const Transaction &t);
+  	//functions
+! 	Transaction(TransactionType transType, uint64_t addr, void *data);
+  	Transaction(const Transaction &t);
+  
+  	BusPacketType getBusPacketType()
+--- 57,73 ----
+  	TransactionType transactionType;
+  	uint64_t address;
+  	void *data;
++ 	uint64_t node_id;
++ 	uint64_t trans_id;
++ 	uint64_t start_cycle;
++ 	uint64_t miss_cycle;
+  	uint64_t timeAdded;
+  	uint64_t timeReturned;
+  
+  
+  	friend ostream &operator<<(ostream &os, const Transaction &t);
+  	//functions
+! 	Transaction(TransactionType transType, uint64_t addr, void *data, uint64_t node_id, uint64_t trans_id, uint64_t start_cycle, uint64_t miss_cycle);
+  	Transaction(const Transaction &t);
+  
+  	BusPacketType getBusPacketType()
