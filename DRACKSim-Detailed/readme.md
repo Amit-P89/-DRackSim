@@ -19,7 +19,7 @@
 * After copying this to $pin-path/source/tools/ use 'make pin' command to compile the instruction trace tool
 * Start as many instruction trace Pintools, as the number of nodes that you set in the mem_defs.h (This is required, otherwise simulation will not start)
 * Samples for using the instruction trace tool are given in the 'bash start_sim.sh'
-* After every simulation use 'bash clear_sm.sh' , because the simualtor creates shared memory variables and will create trouble during next execution if the execution was stopped
+* After every simulation use 'bash clear_sm.sh' , because the simualtor creates shared memory variables and might create trouble during next execution if the execution was stopped
 in-between. clear_sm.sh will clear all the shared memory variables
 
 #Starting Simulation:
