@@ -8,7 +8,10 @@
 * The tool needs to setup paths, either add pin-paths or copy this whole directory to the $pin-path/source/tools/detail/
 * Download DRACKSim2 from https://github.com/umd-memsys/DRAMSim2
 * Extract DRAMSim2 in this directory and name it as DRAMSim2
-* Apply DRAMSim2.patch on extracted DRAMSim2 directory to apply all the modifications that we made on it: patch -p1 < DRAMSim2.patch
+* Apply DRAMSim2.patch on extracted DRAMSim2 directory to apply all the modifications that we made on it: 
+* '''
+* patch -p1 < DRAMSim2.patch
+* '''
 * Download and install boost library in your system from https://www.boost.org/users/download/ or use the copy that we provide in this repo.
 * Extract boost in the same directory
 * Set the number of nodes and number of remote memory pools in the mem_defs.h
