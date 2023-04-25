@@ -1,10 +1,10 @@
-#Run Simulation Instructions:
+***Instructions to use cycle-level Disaggregated Memory Simulation Tool***:
 * Simulation has to be started in two parts:
 	- In first part, instances of pintool need to be initiated with the respective workloads so as to start production of instruction trace.
 	- In second part, the simulator need to be started so as to simulate over the produced instructions traces of each node (one trace for each node).
 	- Instruction traces of multiple workloads can also be produced to represent trace for one-node (Multi-program support, not properly tested)
 
-#Instructions to compile Detailed Cycle-Level Simulation model:
+***Instructions to compile Detailed Cycle-Level Simulation model:***
 * The tool needs to setup paths, either add pin-paths or copy this whole directory to the $pin-path/source/tools/detail/
 * Download DRACKSim2 from https://github.com/umd-memsys/DRAMSim2
 * Extract DRAMSim2 in this directory and name it as DRAMSim2
@@ -18,7 +18,7 @@ patch -p1 < DRAMSim2.patch
 * Set the number of instructions or simulation cycles to simulate in the main.cpp line-no #125 
 * Create executable using 'make sim'
 	
-#Instructions for producing instruction traces:
+***Instructions for producing instruction traces:***
 * After copying this to $pin-path/source/tools/ use 'make pin' command to compile the instruction trace tool
 * Start as many instruction trace Pintools, as the number of nodes that you set in the mem_defs.h (This is required, otherwise simulation will not start)
 * Samples for using the instruction trace tool are given in the 'bash start_sim.sh'
