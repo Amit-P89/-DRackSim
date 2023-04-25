@@ -14,4 +14,4 @@
 * You can use the commands mentioned in gem5_commands_to_validate.sh, that we use to validate
 
 
-***Note: In the SC'23 paper, we had not reported results for Trace simulation model
+***Note: In the SC'23 paper, we had not reported results for Trace simulation model***
