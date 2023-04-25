@@ -1,5 +1,4 @@
-#Prerequisite for running Trace-Based Simulation:
-* Copy whole of this directory to $pin-path/source/tools/
+#Instructions on running Disaggregated memory simulation:
 * Download DRAMSim2 in this directory and apply DRAMSim2.patch on the extracted 'DRAMSim2' directory. 
 ```
 patch -p1 < DRAMSim2.patch
