@@ -8,7 +8,7 @@
 * The tool needs to setup paths, either add pin-paths or copy this whole directory to the $pin-path/source/tools/detail/
 * Download DRACKSim2 from https://github.com/umd-memsys/DRAMSim2
 * Extract DRAMSim2 in this directory and name it as DRAMSim2
-* Apply DRAMSim2.patch on extracted DRAMSim2 directory to apply all the modifications that we made on it: 
+* Apply DRAMSim2.patch on extracted DRAMSim2 directory to apply all the modifications that we made on it and copy files in DRAMSIM2_ini/ to ini/ in DRAMSIM2: 
 ```
 patch -p1 < DRAMSim2.patch
 ```
