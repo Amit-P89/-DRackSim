@@ -24,4 +24,4 @@ Puri, A., Jose, J., Venkatesh, T., & Narayanan, V. (2023). DRackSim: Simulator f
 ***Full Paper Link:***
 https://arxiv.org/abs/2305.09977
 
-$${\color{red}***Note: In the SC'23 paper, we had not reported results for Trace simulation model***}$$
+$${\color{red}Note: In the SC'23 paper, we had not reported results for Trace simulation model}$$
