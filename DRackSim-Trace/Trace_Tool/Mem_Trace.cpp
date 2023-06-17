@@ -31,8 +31,8 @@ using namespace std;
 #include <string.h>
 #include <unistd.h>
 typedef UINT32 CACHE_STATS; // type of cache hit/miss counters
-#include "I_D_Cache.H"
-#include <boost/preprocessor.hpp>
+#include "Caches.H"
+#include "boost/preprocessor.hpp"
 
 std::ofstream TraceFile;
 std::ofstream CacheStats;
