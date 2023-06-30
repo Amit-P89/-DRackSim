@@ -23,7 +23,7 @@
 
 #include "filter.H"
 #include "skipper.H"
-#include "icount2.H"
+#include "icount.H"
 #include "follow_child.H"
 
 extern "C"
