@@ -17,7 +17,7 @@
 using namespace std;
 
 #include "pin.H"
-#include "instlib2.H"
+#include "libinst.H"
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
