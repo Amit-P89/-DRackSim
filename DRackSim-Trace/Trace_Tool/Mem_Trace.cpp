@@ -23,7 +23,7 @@ using namespace std;
 #define L3_PENALTY 42
 
 #include "pin.H"
-#include "instlib2.H"
+#include "libinst.H"
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
