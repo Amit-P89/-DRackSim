@@ -158,6 +158,8 @@ void *node_handler(void *node)
 			}
 
 			common_clock++;
+			if(common_clock%100000==0)
+				cout<<"\nCycle completed"<<common_clock;
 		}
 
 		pthread_barrier_wait(&b);
