@@ -124,22 +124,19 @@ void *parse(void *t_data)
 
 int main()
 {
-	int num_nodes;
-	cout<<"\nInput the number of nodes for which the Traces need to be Parsed\t:";
-	cin>>num_nodes;
-	struct args t_data[num_nodes];
+	int node_id=0;int end_id=0;
+	cout<<"\nInput the node number for which the Traces need to be Parsed\t:";
+	cin>>node_id;
+	struct args t_data;
 	char Text_Trace;
 	cout<<"Press 'y' if you want to generate Text Trace\t:";
 	cin>>Text_Trace;
 
-	pthread_t threads[num_nodes];
+	pthread_t threads;
 
-	for(long i=1;i<=num_nodes;i++)
-	{
-		t_data[i].Text_Trace=Text_Trace;
-		t_data[i].node_id=i;
-		pthread_create(&threads[i-1], NULL, parse, &t_data[i]);
-	}
+	t_data.Text_Trace=Text_Trace;
+	t_data.node_id=node_id;
+	pthread_create(&threads, NULL, parse, &t_data);
 
 	pthread_exit(NULL);	
 
