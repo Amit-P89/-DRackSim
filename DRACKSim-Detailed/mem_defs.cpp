@@ -17,7 +17,7 @@ static int epoch_num = 0;
 #define core_count 4
 
 #define local_mem_size 1
-#define remote_mem_size 32
+#define remote_mem_size 4
 
 // hardware DRAM units of same size in MBs (used by DRAMSim2)
 #define local_DRAM_size (local_mem_size * pow(2.0, 10.0))
