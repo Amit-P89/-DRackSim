@@ -389,7 +389,7 @@ void declare_memory_variables(string dir)
 
 	for (int i = 0; i < num_nodes; i++)
 	{
-		local_mem[i] = getMemorySystemInstance(i + 1, "ini/DDR4_x16_2400_1.ini", "system.ini", "./DRAMSim2", "abc", local_DRAM_size);
+		local_mem[i] = getMemorySystemInstance(i + 1, "ini/DDR4_x16_2400.ini", "system.ini", "./DRAMSim2", "abc", local_DRAM_size);
 		local_mem[i]->RegisterCallbacks(read_cb, write_cb, power_callback); // DRAM simulator function
 
 		//		local_mem[i]->setCPUClockSpeed(3601440555);
