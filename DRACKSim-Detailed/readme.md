@@ -32,6 +32,7 @@ in-between. clear_sm.sh will clear all the shared memory variables
 	- '-T 1/0' : '1' means only simulate multi-threaded part of the workload
 	- '-S n' : skip N initial instructions
 	- '-S' and '-T' can be used together, skip instructions won;t include single-threaded part if '-T 1' is used.
+	- '-M' : Number of instructions to trace and simulate (default 10000000) 	
 * In another terminal, start simulator DRackSim and pass a name of output directory to it, e.g. ' ./DRackSim abc '
 * The simulation will start and continue until the exit condition arrives.
 * The frequency of printing results can be changed using pre-processor #Result_cycle in main.cpp
