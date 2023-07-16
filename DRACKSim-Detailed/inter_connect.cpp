@@ -25,8 +25,8 @@ long double rx_output_port_queue_size = ((rx_per_port_mb * 1024 * 1024));
 
 //all delays in nano-seconds (with respect to CPU of 3.6 GHz)
 
-//all latency parameters are used accordingly to map the interconnect latency of genZ
-//on top of that our queue latency model will add more latency as per the traffic
+//all latency parameters are used accordingly to map the interconnect latency of CXL/genZ
+//on top of that, our queue model will add more latency as per the traffic
 int packetisation_time = ceil(12*CPU_Freq);
 
 // 1ns=1cycle
