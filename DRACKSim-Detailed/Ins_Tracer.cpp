@@ -17,7 +17,7 @@
 using namespace std;
 
 #include "pin.H"
-#include "libinst.H"
+#include "instlib2.H"
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -39,6 +39,8 @@ KNOB<UINT32> KnobNodeNumber(KNOB_MODE_WRITEONCE, "pintool", "N", "1", "Node numb
 KNOB<UINT64> KnobNumInsSkip(KNOB_MODE_WRITEONCE, "pintool", "S", "0", "INS_SKIP");
 // Get number of instructions to skip from the script
 KNOB<UINT64> KnobMultiThread(KNOB_MODE_WRITEONCE, "pintool", "T", "0", "Only Multi_thread");
+// Get number of instructions to skip from the script
+KNOB<UINT64> KnobMaxIns(KNOB_MODE_WRITEONCE, "pintool", "M", "10000000", "Only Multi_thread");
 
 int Procid;
 int Nodeid;
@@ -126,6 +128,9 @@ int n=100;
 int z=0;
 
 
+UINT64 total_ins=0;
+UINT64 ins_to_simulate=0;
+
 string dir_name;
 const char *file;
 std::ostringstream tf;
@@ -150,6 +155,8 @@ static VOID InsRef(UINT32 threadid, string ins, ADDRINT addr, ADDRINT read_op, U
 
     PIN_MutexLock(&Mutex1);
     ins_count++;
+    // if(ins_count%100000==0)
+    //     cout<<ins_count;
     PIN_MutexUnlock(&Mutex1);
 
     if(ins_count<INST_to_SKIP)
@@ -157,6 +164,11 @@ static VOID InsRef(UINT32 threadid, string ins, ADDRINT addr, ADDRINT read_op, U
         return;
     }
 
+
+    if(ins_to_simulate<=total_ins)
+    {
+        PIN_ExitApplication(0);
+    }
     //while(*main_start!=2) { sleep(.001);};
 
     PIN_MutexLock(&Mutex1);
@@ -248,6 +260,7 @@ static VOID InsRef(UINT32 threadid, string ins, ADDRINT addr, ADDRINT read_op, U
         //" w0 "<<temp.WR[0]<<" w1 "<<temp.WR[1]<<" w2 "<<temp.WR[2]<<" w3 "<<temp.WR[3];
         TraceFile.write((char*)&temp,sizeof(temp));
         (*num_ins)++;
+        total_ins++;
         if((*num_ins)%100000 == 0)cout<<"  "<<dec<<*num_ins<<" ";
     }
     else if((*num_ins)>max_ins)
@@ -427,6 +440,7 @@ extern int main(int argc, char *argv[])
  
     Nodeid = KnobNodeNumber.Value();
     INST_to_SKIP = KnobNumInsSkip.Value();
+    ins_to_simulate = KnobMaxIns.Value();
     
     int multi_thread_knob = KnobMultiThread.Value();
     if(multi_thread_knob==1)
