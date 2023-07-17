@@ -1,7 +1,7 @@
 using namespace std;
 
 #include "pin.H"
-#include "instlib2.H"
+#include "instlib.H"
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
