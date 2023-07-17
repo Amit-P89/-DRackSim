@@ -566,7 +566,7 @@ int main(int argc, char *argv[])
 	// 	}
 	// }
 	for(int i=0;i<num_nodes;i++){
-		RDMA_trans_id[i] = 1e10;
+		RDMA_trans_id[i] = 1e12;
 	}
 	if(argc<2)
 		exit(0);
