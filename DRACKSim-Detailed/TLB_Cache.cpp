@@ -1414,7 +1414,7 @@ void memory_request_completed(int node_id)
                     break;
                 continue;
             }
-            if (trans_id > 1e8)
+            if (trans_id > 1e10)
             {
                 RDMA_request_queue[node_id][trans_id].pkt_count+=1;
                 if(RDMA_request_queue[node_id][trans_id].pkt_count==RDMA_packet_segments)
