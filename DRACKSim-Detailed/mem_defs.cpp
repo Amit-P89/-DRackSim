@@ -161,7 +161,7 @@ void update(int node_id, int mem_id, uint64_t cycle, uint64_t tid, uint64_t star
 	int i = mem_id - 1;
 	total_cycle[i] = cycle;
 	// It is an RDMA request
-	if(tid>1e8)
+	if(tid>1e10)
 	{
 		address = address&(0xfffffffff000);
 		RDMA_response_queue[node_id][address]++;
@@ -186,7 +186,7 @@ void update(int node_id, int mem_id, uint64_t cycle, uint64_t tid, uint64_t star
 		}
 	}
 	//cache-line memory request
-	else if (tid<1e8 && i < num_nodes)
+	else if (tid<1e10 && i < num_nodes)
 	{
 		// calcuates memory transaction time and total cycles till now at memory unit with-in local node
 		remote_memory_access mem_response;
@@ -210,7 +210,7 @@ void update(int node_id, int mem_id, uint64_t cycle, uint64_t tid, uint64_t star
 			local_writebacks[i]++;
 		}
 	}
-	else if (tid<1e8 && i >= num_nodes && i < (num_nodes + num_mem_pools))
+	else if (tid<1e10 && i >= num_nodes && i < (num_nodes + num_mem_pools))
 	{
 		int remote_pool = i - num_nodes;
 		remote_memory_access mem_response;
