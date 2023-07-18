@@ -124,7 +124,7 @@ bool has_queue_size(deque<packet> *queue_source, int id, int current_packet_size
 	for (int i = 0; i < queue_source[id].size(); i++)
 	{
 		// int current_packet_size = 0;
-		if (queue_source[id][i].mem.trans_id>1e8)
+		if (queue_source[id][i].mem.trans_id>1e10)
 			size += RDMA_PKT_SIZE*(network_flow) + 64 * (!network_flow);
 		else if (queue_source[id][i].mem.trans_id == 0)
 			size += 128 * (!network_flow) + 64 * (network_flow);
@@ -147,7 +147,7 @@ void send_to_source_nic_queue(deque<packet> *packet_queue_source, deque<packet> 
 			int current_packet_size = 0;
 			if (packet_queue_source[i].front().mem.trans_id == 0)
 				current_packet_size = 128 * (!network_flow) + 64 * (network_flow);
-			else if (packet_queue_source[i].front().mem.trans_id > 1e8)
+			else if (packet_queue_source[i].front().mem.trans_id > 1e10)
 				current_packet_size = RDMA_PKT_SIZE*(network_flow) + 64 * (!network_flow);
 			else
 				current_packet_size = 64 * (!network_flow) + 128 * (network_flow);
@@ -224,7 +224,7 @@ bool virtual_queue_has_space(int port_no, int dest_count, deque<packet> (&input_
 		{
 			if (input_port_queue[port_no][i][j].mem.trans_id == 0)
 				size = size + 128 * (!network_flow) + 64 * (network_flow);
-			else if (input_port_queue[port_no][i][j].mem.trans_id > 1e8)
+			else if (input_port_queue[port_no][i][j].mem.trans_id > 1e10)
 				size = size + RDMA_PKT_SIZE * (network_flow) + 64 * (!network_flow);
 			else
 				size = size + 64 * (!network_flow) + 128 * (network_flow);
@@ -256,7 +256,7 @@ void source_to_switch_input_port(deque<packet> *nic_queue_source, deque<packet> 
 			{
 				current_packet_size = 128 * (!network_flow) + 64 * (network_flow);
 			}
-			else if (nic_queue_source[i].front().mem.trans_id > 1e8)
+			else if (nic_queue_source[i].front().mem.trans_id > 1e10)
 			{
 				current_packet_size = RDMA_PKT_SIZE * (network_flow) + 64 * (!network_flow);
 			}
@@ -336,7 +336,7 @@ void find_free_buffers_at_output_ports(int &count, int *output_queue_status, int
 		{
 			if (output_port_queue[i][j].mem.trans_id == 0)
 				size += 128 * (!network_flow) + 64 * (network_flow);
-			else if (output_port_queue[i][j].mem.trans_id > 1e8)
+			else if (output_port_queue[i][j].mem.trans_id > 1e10)
 				size += RDMA_PKT_SIZE * (network_flow) + 64 * (!network_flow);
 			else
 				size += 64 * (!network_flow) + 128 * (network_flow);
@@ -416,7 +416,7 @@ void switch_input_port_to_output_port(deque<packet> (&input_port_queue)[rows][co
 				if (status)
 				{
 					int current_packet_size = (input_port_queue[arbitrator][out_port_num].front().mem.trans_id == 0) ? (128 * (!network_flow) + 64 * (network_flow)) : (64 * (!network_flow) + 128 * (network_flow));
-					if(input_port_queue[arbitrator][out_port_num].front().mem.trans_id > 1e8){
+					if(input_port_queue[arbitrator][out_port_num].front().mem.trans_id > 1e10){
 						current_packet_size = RDMA_PKT_SIZE * (network_flow) + 64 * (!network_flow);
 					}
 					if ( (status == 1 && current_packet_size == 128) || (status!=3 && current_packet_size == RDMA_PKT_SIZE))
@@ -500,7 +500,7 @@ void switch_to_dest_nic_queue(deque<packet> *output_port_queue, deque<packet> *n
 		if (output_port_queue[i].size() > 0)
 		{
 			int current_packet_size = (output_port_queue[i].front().mem.trans_id == 0) ? 128 * (!network_flow) + 64 * (network_flow) : 64 * (!network_flow) + 128 * (network_flow);
-			if(output_port_queue[i].front().mem.trans_id > 1e8){
+			if(output_port_queue[i].front().mem.trans_id > 1e10){
 				current_packet_size = RDMA_PKT_SIZE * (network_flow) + 64 * (!network_flow);
 			}
 			has_size = has_queue_size(nic_queue_dest, i, current_packet_size);
@@ -674,7 +674,7 @@ void network_memory_completion(deque<packet> *packet_queue_dest, vector<remote_m
 		while (!packet_queue_dest[i].empty())
 		{
 			mem_response[i].push_back(packet_queue_dest[i].front().mem);
-			if(packet_queue_dest[i].front().mem.trans_id<1e8)
+			if(packet_queue_dest[i].front().mem.trans_id<1e10)
 				add_remote_access_time(packet_queue_dest[i].front().mem);
 			// count2++;
 			// pthread_mutex_lock(&lock_queue);
