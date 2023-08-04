@@ -530,7 +530,10 @@ void print_stats(int node_id)
 	ResultsFile[node_id]<<setprecision(2)<<"\nNode avg local access time:\t\t\t\t\t"<<temp1<<"(ns)";
 	ResultsFile[node_id]<<setprecision(2)<<"\nNode avg remote access time:\t\t\t\t\t"<<temp2<<"(ns)";
 	ResultsFile[node_id]<<setprecision(2)<<"\nNode avg remote access time (excluding network):\t\t"<<temp4<<"(ns)";
-    ResultsFile[node_id]<<setprecision(2)<<"\nAverage memory access time :\t\t\t\t\t"<<temp3<<"(ns)";
+    	//Calculated by tracking all the memory accesses
+	ResultsFile[node_id]<<setprecision(2)<<"\nAverage memory access time  :\t\t\t\t"<<temp3<<"(ns)";
+	//calculated at LLC after every LLC miss serviced
+	ResultsFile[node_id]<<setprecision(2)<<"\nAverage memory access time (LLC) :\t\t\t\t"<<(long double)total_mem_cost[node_id]/(long double)(total_mem_access[node_id]*3.6);
 	ResultsFile[node_id].close();
 	print_mem_stats(node_id);
 }
