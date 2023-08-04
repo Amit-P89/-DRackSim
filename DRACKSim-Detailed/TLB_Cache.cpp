@@ -100,6 +100,7 @@ struct miss_queue
     uint64_t L1_cache_miss_complete_cycle;
     uint64_t L2_cache_miss_complete_cycle;
     uint64_t L3_cache_miss_complete_cycle;
+    uint64_t memory_start_cycle;
     vector <uint64_t>ld_str_dest;
     vector <merged_LLC_mshr>merged_mshr_in_shared_LLC;
     miss_queue()
@@ -1391,6 +1392,10 @@ void RDMA_request_complete(uint64_t trans_id,int node_id)
     RDMA_request_queue[node_id].erase(trans_id);
 }
 
+//to calculate avg. memory latency at LLC (the other way around is to do it through tracking all memory accesses (also done)) 
+uint64_t total_mem_cost[num_nodes]={0};
+uint64_t total_mem_access[num_nodes]={0};
+
 void memory_request_completed(int node_id)
 {
     // memory responses served to core this cycle, max of one memory response per core per cycle
@@ -1439,6 +1444,8 @@ void memory_request_completed(int node_id)
                     }
                     else
                     {
+                        total_mem_cost[node_id] = total_mem_cost[node_id] + common_clock - (*it).memory_start_cycle;
+                        total_mem_access[node_id]++;
                         (*it).complete_cycle = common_clock;
                         memory_completion_queue[i].erase(j);
                         core_mem_complete[core_id] = 1;
