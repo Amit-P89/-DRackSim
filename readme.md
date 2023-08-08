@@ -1,3 +1,8 @@
+<h1>DRackSim Simulator</h1>
+<h2>Hardware Disaggregated Memory systems Simulations at Scale</h2>  
+
+<h3>Usage Instructions</h3>
+
 ***Installing Pin***
 * Download Intel pin-3.20-98437-gf02b61307-gcc-linux.tar.gz from 
 
