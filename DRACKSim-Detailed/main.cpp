@@ -610,7 +610,7 @@ int main(int argc, char *argv[])
 	// 	cout<<victim_pages[0][i]<<" ";
 	// }
 	// cout<<endl;
-	for (int i = 1; i <= num_nodes; i++)
+	for (int i = nid; i < nid+num_nodes; i++)
 	{
 		// each thread for one node simulation
 		pthread_create(&local_mem_threads[i - 1], NULL, node_stream_handler, (void *)i);
