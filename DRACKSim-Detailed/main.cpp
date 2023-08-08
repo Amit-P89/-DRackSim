@@ -79,6 +79,9 @@ void Schedule_Instruction_on_cpu_cores(int node)
 	}
 }
 
+
+int nid=0;
+
 std::ofstream ResultsFile[num_nodes];
 // keep track of core-wise total instruction fetched on each node
 uint64_t num_ins_fetched[num_nodes][core_count] = {0};
@@ -117,7 +120,7 @@ void *node_stream_handler(void *node)
 	num_ins = (uint64_t *)shmat(ShmID3, NULL, 0);
 
 	int c = 0;
-	nodeid = nodeid - 1;
+	nodeid = nodeid - nid;
 	// fill_load_buffer(nodeid);//
 	initialize_branch_predictor(nodeid);
 	// simulation starts here, clock started
@@ -572,10 +575,15 @@ int main(int argc, char *argv[])
 		RDMA_trans_id[i] = 1e12;
 	}
 	if(argc<2)
+	{
+		cout<<"\nEnter output directory name for results";
 		exit(0);
+	}
 	else if(argc==2)
 		dir=argv[1];
 
+	cout<<"\nEnter starting node number:";
+	cin>>nid;
 	declare_memory_variables(dir);
 	pthread_barrier_init(&b, NULL, num_nodes);
 	pthread_mutex_init(&lock, NULL);
