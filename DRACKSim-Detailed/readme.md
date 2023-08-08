@@ -1,3 +1,5 @@
+<h1>Cycle-level Disaggregated Memory Simulator</h1>
+
 ***Instructions to use cycle-level Disaggregated Memory Simulation Tool***:
 * Simulation has to be started in two parts:
 	- In first part, instances of pintool need to be initiated with the respective workloads so as to start production of instruction trace.
