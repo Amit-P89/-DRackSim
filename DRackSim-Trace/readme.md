@@ -1,4 +1,7 @@
-***Instructions on running Disaggregated memory simulation:***
+<h1>DRackSim Simulator</h1>
+<h3>Hardware Disaggregated Memory systems Simulations at Scale</h3>  
+
+***Instructions on running simulations:***
 * Download DRAMSim2 in this directory and apply DRAMSim2.patch on the extracted 'DRAMSim2' directory. 
 ```
 patch -p1 < DRAMSim2.patch
