@@ -21,12 +21,4 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-ins
 * You can use the commands mentioned in gem5_commands_to_validate.sh, that we use to validate
 
 
-***Citation Link:***
-```
-Puri, A., Kartheek Bellamkonda, Kailash Narreddy Jose, J., Venkatesh, T., & Narayanan, V. (2023). DRackSim: Simulator for Rack-scale Memory Disaggregation. ArXiv. /abs/2305.09977
-```
-
-***Full Paper Link:***
-https://arxiv.org/abs/2305.09977
-
 $${\color{white}Note: In the SC'23 paper, we had not reported results for Trace simulation model}$$
