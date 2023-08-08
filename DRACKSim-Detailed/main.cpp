@@ -125,7 +125,7 @@ void *node_stream_handler(void *node)
 	initialize_branch_predictor(nodeid);
 	// simulation starts here, clock started
 	// while (fileid<=1000)
-	while(common_clock<=simulation_time+5 && total_num_inst_commited<=max_insts_to_simulate)
+	while(total_num_inst_commited<=max_insts_to_simulate)
 	{
 		pthread_barrier_wait(&b);
 
