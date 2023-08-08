@@ -576,7 +576,7 @@ int main(int argc, char *argv[])
 	}
 	if(argc<2)
 	{
-		cout<<"\nEnter output directory name for results";
+		cout<<"\nEnter output directory name for results\n";
 		exit(0);
 	}
 	else if(argc==2)
