@@ -24,7 +24,7 @@ KNOB<UINT64> KnobNumInsSkip(KNOB_MODE_WRITEONCE, "pintool", "S", "0", "INS_SKIP"
 // Get number of instructions to skip from the script
 KNOB<UINT64> KnobMultiThread(KNOB_MODE_WRITEONCE, "pintool", "T", "0", "Only Multi_thread");
 // Get number of instructions to skip from the script
-KNOB<UINT64> KnobMaxIns(KNOB_MODE_WRITEONCE, "pintool", "M", "10000000", "Only Multi_thread");
+KNOB<UINT64> KnobMaxIns(KNOB_MODE_WRITEONCE, "pintool", "M", "10000000", "Max Instructions");
 
 int Procid;
 int Nodeid;
