@@ -235,6 +235,10 @@ void update_mshr(int node_id)
 
 void itlb_search(int node_id, int core_id)
 {
+    if (branch_misprediction_penalty[node_id][core_id] > 0)
+    {
+        return;
+    }
     INST temp;
     if (!core_inst_stream[node_id][core_id].empty())
     {
@@ -627,6 +631,10 @@ void update_icache_mshr(int node_id, int core_id)
 bool dtlb_to_dcache[num_nodes][core_count] = {0};
 void dtlb_search(int node_id, int core_id)
 {
+    if (branch_misprediction_penalty[node_id][core_id] > 0)
+    {
+        return;
+    }
     miss_queue load_store_entry;
     if (!load_store_buffer[node_id][core_id].empty())
     {
