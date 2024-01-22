@@ -3,7 +3,7 @@
 #include<bitset>
 #include<fstream>
 
-ofstream out,mem_stats,invalid,netstats;
+#define chunk_size		4
 
 #define Page_Size		4096	//in bytes
 
@@ -33,13 +33,15 @@ class local_addr_space
 	unsigned long free_pages;				//free pages in all the memory
 	unsigned long local_pages;				//total local pages in memory
 	unsigned long remote_pages;				//total remote pages in memory
-	unsigned long local_alloc_pages;
 	int node_no;
 	node_remote_map *remote_map;	//node maintain local-remote mapping table
 	int remote_map_index;
 	vector <bool> page_allocation_status;
+	vector <int> free_local_page_list;
+	vector <int> free_remote_page_list;
 
 public:
+
 	local_addr_space(){}
 
 	unsigned long local_page_count()
@@ -58,12 +60,12 @@ public:
 		for(uint64_t i=0;i<local_pages;i++)
 		{
 			page_allocation_status.push_back(0);
+			free_local_page_list.push_back(i);
 		}
 		remote_pages=0;
 		allocated_pages=0;
 		local_allocated_pages=0;
 		remote_allocated_pages=0;
-		local_alloc_pages=0;
 		free_pages=total_pages;
 		remote_mem_size=0;
 		cout<<fixed;
@@ -71,21 +73,20 @@ public:
 		cout<<"\nNumbee of pages= "<<total_pages<<endl;
 	}
 
-//for adding in victim list
-	int64_t find_unallocated_page()
+//find victim local page, if empty
+	int64_t find_victim_page()
 	{
-		static int ind=-1;
-		ind++;
-		if(ind==(local_pages-1))
-			ind=0;
-		for(;ind<local_pages;ind++)
+		if(!free_local_page_list.size())
+			return -1;
+		else
 		{
-			if(page_allocation_status[ind]==0)
-			{
-				return ind;
-			}
+			int64_t free_page_addr = free_local_page_list[0];
+			free_local_page_list.erase(free_local_page_list.begin());
+			local_allocated_pages++;
+			allocated_pages++;
+			free_pages--;
+			return free_page_addr;
 		}
-		return -1;
 	}
 
 	~local_addr_space()
@@ -97,55 +98,36 @@ public:
 	//check if free(local or remote) memory is available
 	unsigned long has_free()
 	{
-		if(free_pages>0)
+		if(free_remote_page_list.size() || free_local_page_list.size())
 		{
-			return free_pages;
+			return (free_remote_page_list.size()+free_local_page_list.size());
 		}
 		else
 			return 0;
 	}
 
-	void update_page_allocation_status(uint64_t paddr)
-	{
-		if(page_allocation_status[paddr]==0)
-		{
-			free_pages--;
-			allocated_pages++;
-		}
-		page_allocation_status[paddr]=1;
-		local_alloc_pages++;
-	}
-
 	//check if free-local memory is available
 	bool free_local()
 	{
-		//auto it=find(page_allocation_status.begin(), page_allocation_status.end(), bool(0));
-		for(uint64_t i=0;i<local_pages;i++)
-		{
-			if(page_allocation_status[i]==false)
-				return true;
-		}
+		if(free_local_page_list.size())
+			return true;
+		else
 			return false;
-
-		// if(local_pages > local_allocated_pages)
-		// 	return true;
-		// else
-		// 	return false;
 	}
 
 	//check if free-local memory is available
 	bool free_remote()
 	{
-		if(remote_pages > remote_allocated_pages)
+		if(free_remote_page_list.size())
 			return true;
 		else
 			return false;
 	}
 
 	//check if a page is local or not
-	bool is_local(unsigned long page_no)
+	bool is_local(unsigned long paddr)
 	{
-		if(page_no<local_pages)
+		if(paddr<local_pages)
 			return 1;
 		else
 			return 0;
@@ -154,25 +136,23 @@ public:
 	//allocates a local page of memory
 	long int allocate_local_page()
 	{
-		local_alloc_pages++;
+		uint64_t paddr = free_local_page_list[0];
+		free_local_page_list.erase(free_local_page_list.begin());
 		local_allocated_pages++;
-		while(page_allocation_status[local_allocated_pages]==true)
-		{
-			local_allocated_pages++;
-		}
 		allocated_pages++;
 		free_pages--;
-		page_allocation_status[local_allocated_pages-1]=true;
-		return (local_allocated_pages-1);
+		return paddr;
 	}
 
 	//allocates a remote page of memory
 	long int allocate_remote_page()
 	{
+		uint64_t paddr = free_remote_page_list[0];
+		free_remote_page_list.erase(free_remote_page_list.begin());
 		remote_allocated_pages++;
 		allocated_pages++;
 		free_pages--;
-		return ((remote_allocated_pages + local_pages)-1);
+		return paddr;
 	}
 
 
@@ -214,35 +194,25 @@ public:
 
 	void get_stats()
 	{
-		int num_local_allocated_pages=0;
-		for(int i=0;i<page_allocation_status.size();i++)
-		{
-			if(page_allocation_status[i]==1)
-				num_local_allocated_pages++;
-		}
 		mem_stats<<"\n--------------------------------------------------------------------";
 		mem_stats<<"\nMemory Size               			:"<<memory_size<<"GB";
 		mem_stats<<"\n\tLocal Memory Size			:"<<(memory_size - remote_mem_size)<<"GB";
 		mem_stats<<"\n\tRemote Memory Size			:"<<remote_mem_size<<"GB";
-		mem_stats<<"\nLocal Memory Used        			:"<<(((num_local_allocated_pages)*4096)/pow(2.0,30.0))<<"GB";
+		mem_stats<<"\nLocal Memory Used        			:"<<(((local_allocated_pages)*4096)/pow(2.0,30.0))<<"GB";
 		mem_stats<<"\nRemote Memory Used        			:"<<((remote_allocated_pages*4096)/pow(2.0,30.0))<<"GB";
 		mem_stats<<"\nTotal Pages in memory     			:"<<total_pages;
 		mem_stats<<"\n\tTotal local pages 			 :"<<local_pages;
 		mem_stats<<"\n\tTotal remote pages 		 	:"<<remote_pages;
 		mem_stats<<"\nTotal Allocated Pages 				:"<<allocated_pages;
-		mem_stats<<"\n\tTotal local allocated pages 		:"<<num_local_allocated_pages;
+		mem_stats<<"\n\tTotal local allocated pages 		:"<<local_allocated_pages;
 		mem_stats<<"\n\tTotal remote allocated pages 		:"<<remote_allocated_pages;
 		mem_stats<<"\nFree Pages left 				:"<<free_pages;
-		mem_stats<<"\n\tTotal local free pages 			:"<<(local_pages - num_local_allocated_pages);
-		mem_stats<<"\n\tTotal remote free pages 		:"<<(remote_pages - remote_allocated_pages);
+		mem_stats<<"\nFree Pages left2 				:"<<(free_local_page_list.size()+free_remote_page_list.size());
+		mem_stats<<"\n\tTotal local free pages 			:"<<(free_local_page_list.size());
+		mem_stats<<"\n\tTotal remote free pages 		:"<<(free_remote_page_list.size());
 		mem_stats<<"\n------------------------------------------------------------------\n";
 	}
 
-
-	int num_local_pages()
-	{
-		return local_alloc_pages;
-	}
 	//add entry for local-remote mapping whenever remote memory is requested 
 	void add_remote_memory_entry(unsigned long local_base, unsigned long remote_base, unsigned long mask, unsigned long size, int mem_pool)
 	{
@@ -270,8 +240,8 @@ public:
 	{
 		if(remote_map_index>=0)
 		{
-			mem_stats<<"\n\t\t\t\tNode Remote-Memory Mapping Table Node-"<<node_no+1<<endl;
-			mem_stats<<"\n\t\tS.No.\t local_base\t remote_base\t mask\t size\t num_pages\t mem_pool\n";
+			mem_stats<<"\n\t\t\t\t\t\tNode Remote-Memory Mapping Table Node-"<<node_no+1<<endl;
+			mem_stats<<"\n\t\t\tS.No.\t local_base\t remote_base\t mask\t size\t num_pages\t mem_pool\n";
 			mem_stats<<"\t\t\t-----------------------------------------------------------------------------";
 			for(int i=0;i<=remote_map_index;i++)
 			{
@@ -295,12 +265,12 @@ public:
 
 	void pool_wise_page_count(int num_pools)
 	{
+		int num_pages_in_chunk = chunk_size * 256;
 		unsigned long pools[num_pools]={0};
 		for(int i=0;i<=remote_map_index;i++)
 		{
-			cout<<" i = "<<i;
 			int pool_no=remote_map[i].mem_pool_no;
-			pools[pool_no]=pools[pool_no]+1024;
+			pools[pool_no]=pools[pool_no]+num_pages_in_chunk;
 		}
 		unsigned long pages_left_in_last_shared_region= remote_pages - (remote_allocated_pages);// - local_pages);
 		
@@ -488,6 +458,11 @@ void request_remote_memory(local_addr_space &L, remote_addr_space &R, long doubl
 	unsigned long new_pages=(pow(2.0,20.0) * mem_shared) / 4096;
 	if(R.free_pages>=new_pages)
 	{
+		for(int i=0;i<new_pages;i++)
+		{
+			// page_allocation_status.push_back(0);
+			L.free_remote_page_list.push_back(L.total_pages+i);
+		}
 		L.add_remote_memory_entry(L.total_pages,R.allocated_pages,12,new_pages,R.mem_pool_no);
 		L.total_pages=L.total_pages+new_pages;
 		L.free_pages=L.free_pages+new_pages;
