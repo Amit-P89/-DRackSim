@@ -1559,7 +1559,6 @@ void handle_page_fault(pgd &_pgd, int node_no, uint64_t vaddr, uint64_t &paddr, 
 
         new_remote_chunk_allocated = true;
         int remote_pool = round_robin_pool_select();
-        double chunk_size = 4.0;//MB
         pthread_mutex_lock(&lock_mem);
         request_remote_memory(L, R[remote_pool], chunk_size);
         pthread_mutex_unlock(&lock_mem);
