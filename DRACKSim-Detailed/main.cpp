@@ -16,6 +16,7 @@
 using namespace std;
 // #define local_remote 1
 uint64_t common_clock = 0;
+ofstream out,mem_stats,invalid,netstats;
 #include "mem_defs.cpp"
 
 
@@ -542,12 +543,18 @@ void print_stats(int node_id)
 }
 
 void print_mem_stats(int node_id)
-{
+{	
+		string mem;
+	mem = dir + "/mem_stats";
+	// cout << mem << endl;
+	const char *mem1 = mem.c_str();
+	mem_stats.open(mem1, ios::app);
 	L[node_id].get_stats();
 	mem_stats<<"\n\n------ Pool Wise Page Count --------------";
 	L[node_id].pool_wise_page_count(num_mem_pools);
 	mem_stats<<"\n\n-------Local-Remote Mapping Entries--------------";
 	L[node_id].display_mapping(mem_stats);
+	mem_stats.close();
 }
 
 void fill_victim_list(int node_id)
