@@ -407,15 +407,11 @@ void declare_memory_variables(string dir)
 	inv = dir + "/memory_access_completion_log.trc";
 	tra = dir + "/Extra_stats.log";
 	ou = dir + "/pool_select_trace.trc";
-	mem = dir + "/mem_stats";
-
-
 
 	cout << inv << endl;
 	cout << tra << endl;
 	cout << ou << endl;
-	cout << mem << endl;
-
+	
 	const char *dirr = dir.c_str();
 
 	mkdir(dirr, 0777);
@@ -427,8 +423,6 @@ void declare_memory_variables(string dir)
 	track.open(tra1);
 	const char *ou1 = ou.c_str();
 	out.open(ou1);
-	const char *mem1 = mem.c_str();
-	mem_stats.open(mem1);
 }
 
 // stats for local access
