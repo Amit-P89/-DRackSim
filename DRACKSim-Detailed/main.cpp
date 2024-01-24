@@ -14,7 +14,7 @@
 #include <sstream>	
 #include <fstream>
 using namespace std;
-// #define local_remote 1
+#define local_remote 1
 uint64_t common_clock = 0;
 ofstream out,mem_stats,invalid,netstats;
 #include "mem_defs.cpp"
