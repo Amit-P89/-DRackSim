@@ -175,15 +175,6 @@ void *node_stream_handler(void *node)
 		
 		if(common_clock%freq_ratio==2)
 			local_mem[nodeid]->update();
-		// cout<<"abc2 "<<nodeid<<endl;
-		// if(common_clock%1000000==0)
-		// {
-		// 	cout << "\nNode-ID- " << nodeid;
-		// 	cout << "\n Total issued instructions: " << num_inst_issued[nodeid];
-		// 	cout << "\n Total executed instructions: " << num_inst_exec[nodeid];
-		// 	cout << "\n Total committed instructions: " << num_inst_commited[nodeid];
-		// }
-	
 
 		if (nodeid == 0 && common_clock%freq_ratio==2)
 		{
