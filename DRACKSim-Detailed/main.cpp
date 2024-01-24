@@ -125,10 +125,13 @@ void *node_stream_handler(void *node)
 	// fill_load_buffer(nodeid);//
 	initialize_branch_predictor(nodeid);
 	// simulation starts here, clock started
-	// while (fileid<=1000)
+	// while(common_clock<=100000000)
+	//with multiple nodes,use simulation time to control end of the simulation, as simultaneous execution of nodes
+	//is meaningful for scalable performance evaluation
 	while(total_num_inst_commited<=max_insts_to_simulate)
+	//for single node, number of instructions can be also used to mark the end of simulation
 	{
-		pthread_barrier_wait(&b);
+		pthread_barrier_wait(&b); 
 
 		// pintool writes a max_ins number of instructions in a file and creates a new file everytime, delete old once it is read
 		//(this hack is used to save disk space to avoid large instruction traces)
@@ -611,7 +614,7 @@ int main(int argc, char *argv[])
 	for (int i = nid; i < nid+num_nodes; i++)
 	{
 		// each thread for one node simulation
-		pthread_create(&local_mem_threads[i - 1], NULL, node_stream_handler, (void *)i);
+		pthread_create(&local_mem_threads[i - nid], NULL, node_stream_handler, (void *)i);
 	}
 
 	for (int i = 1; i <= (num_nodes); i++)
