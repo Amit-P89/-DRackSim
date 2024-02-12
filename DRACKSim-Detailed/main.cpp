@@ -104,7 +104,7 @@ void *node_stream_handler(void *node)
 	std::ifstream TraceFile;
 	string in;
 	std::ostringstream ss, tf;
-	ss << nodeid;
+	ss << nid;
 	int fileid = 0;
 	tf << fileid;
 	string f1 = "./Output/Node" + ss.str() + "/TraceFile" + tf.str() + ".trc";
@@ -112,16 +112,16 @@ void *node_stream_handler(void *node)
 
 	//cout<<f1<<endl;
 	
-	ShmKEY1 = 10 * nodeid + 1;
+	ShmKEY1 = 10 * nid + 1;
 	ShmID1 = shmget(ShmKEY1, sizeof(int), IPC_CREAT | 0666);
 	main_start = (int *)shmat(ShmID1, NULL, 0);
 
-	ShmKEY3 = 10 * nodeid + 3;
+	ShmKEY3 = 10 * nid + 3;
 	ShmID3 = shmget(ShmKEY3, sizeof(uint64_t), IPC_CREAT | 0666);
 	num_ins = (uint64_t *)shmat(ShmID3, NULL, 0);
 
 	int c = 0;
-	nodeid = nodeid - nid;
+	nodeid = nodeid - 1;
 	// fill_load_buffer(nodeid);//
 	initialize_branch_predictor(nodeid);
 	// simulation starts here, clock started
@@ -611,10 +611,10 @@ int main(int argc, char *argv[])
 	// 	cout<<victim_pages[0][i]<<" ";
 	// }
 	// cout<<endl;
-	for (int i = nid; i < nid+num_nodes; i++)
+	for (int i = 1; i <= num_nodes; i++)
 	{
 		// each thread for one node simulation
-		pthread_create(&local_mem_threads[i - nid], NULL, node_stream_handler, (void *)i);
+		pthread_create(&local_mem_threads[i-1], NULL, node_stream_handler, (void *)i);
 	}
 
 	for (int i = 1; i <= (num_nodes); i++)
