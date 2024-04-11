@@ -23,5 +23,5 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-ins
 ***Citation Link***
 https://arxiv.org/abs/2305.09977
 
-***Compact Version of this Paper Accepted For Presentation at:***
+***Paper Accepted For Presentation at:***
 https://sigsim.acm.org/conf/pads/2024/
