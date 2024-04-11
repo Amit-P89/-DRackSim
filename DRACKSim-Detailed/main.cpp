@@ -531,7 +531,7 @@ void print_stats(int node_id)
     	//Calculated by tracking all the memory accesses
 	ResultsFile[node_id]<<setprecision(2)<<"\nAverage memory access time  :\t\t\t\t"<<temp3<<"(ns)";
 	//calculated at LLC after every LLC miss serviced
-	ResultsFile[node_id]<<setprecision(2)<<"\nAverage memory access time (LLC) :\t\t\t\t"<<(long double)total_mem_cost[node_id]/(long double)(total_mem_access[node_id]*3.6);
+	// ResultsFile[node_id]<<setprecision(2)<<"\nAverage memory access time (LLC) :\t\t\t\t"<<(long double)total_mem_cost[node_id]/(long double)(total_mem_access[node_id]*3.6);
 	ResultsFile[node_id].close();
 	print_mem_stats(node_id);
 }
