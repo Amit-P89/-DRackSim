@@ -23,6 +23,7 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-ins
 
 
 ***If you use this tool, please cite it as***
+
 @misc{puri2023dracksim,
       title={DRackSim: Simulator for Rack-scale Memory Disaggregation}, 
       author={Amit Puri and John Jose and Tamarapalli Venkatesh and Vijaykrishnan Narayanan},
