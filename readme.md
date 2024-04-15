@@ -20,17 +20,16 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-ins
 * Apply gem5.patch to the original gem5 code, this will calibrate different latencies and add suitable cache-levels to match DRACKSim simulator to the validation target
 * You can use the commands mentioned in gem5_commands_to_validate.sh, that we use to validate
 
-`@misc
-{
+```
+@misc{
 puri2023dracksim,
 title={DRackSim: Simulator for Rack-scale Memory Disaggregation}, 
 author={Amit Puri and John Jose and Tamarapalli Venkatesh and Vijaykrishnan Narayanan},
 year={2023},
 eprint={2305.09977},
 archivePrefix={arXiv},
-primaryClass={cs.DC}
-}`
-
+primaryClass={cs.DC}}
+```
 
 ***If you use this tool, please cite it as***
 
