@@ -37,4 +37,5 @@ primaryClass={cs.DC}}
 https://sigsim.acm.org/conf/pads/2024/
 
 ***DRackSim: Simulating CXL-enabled Large-Scale Disaggregated Memory Systems***
+
 *Amit Puri, Kartheek Bellamkonda, Kailash Narreddy, John Jose, Tamarapalli Venkatesh, Vijaykrishnan Narayanan*
