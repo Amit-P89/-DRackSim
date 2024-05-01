@@ -38,4 +38,3 @@ https://sigsim.acm.org/conf/pads/2024/
 
 ***DRackSim: Simulating CXL-enabled Large-Scale Disaggregated Memory Systems***
 **Amit Puri, Kartheek Bellamkonda, Kailash Narreddy, John Jose, Tamarapalli Venkatesh, Vijaykrishnan Narayanan**
-38th ACM SIGSIM Conference on Principles of Advanced Discrete Simulation [PADS-2024], Atlanta, Georgia, USA, 2024. (To appear)
