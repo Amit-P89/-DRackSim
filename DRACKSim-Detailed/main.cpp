@@ -1,3 +1,4 @@
+using namespace std;
 #include <iostream>
 #include <sys/shm.h>
 #include <sys/types.h>
@@ -13,7 +14,6 @@
 #include <map>
 #include <sstream>	
 #include <fstream>
-using namespace std;
 #define local_remote 1
 uint64_t common_clock = 0;
 ofstream out,mem_stats,invalid,netstats;
