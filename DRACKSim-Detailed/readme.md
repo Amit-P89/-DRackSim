@@ -9,7 +9,7 @@
 	- Instruction traces of multiple workloads can also be produced to represent traces for one-node (Multi-program support, not properly tested)
 
 ***Instructions to compile Detailed Cycle-Level Simulation model:***
-* The tool needs to set paths, either add pin-paths or copy this whole directory to the **$pin-path/source/tools/detail/**
+* The tool needs to set paths, either add pin-paths or copy this whole directory to the **$pin-path/source/tools/detail/** (/detail is the new directory to be created)
 * Download DRACKSim2 from **https://github.com/umd-memsys/DRAMSim2**
 * Extract DRAMSim2 in this directory and name it as DRAMSim2
 * Apply DRAMSim2.patch on the extracted DRAMSim2 directory to apply all the modifications that we made on it and copy files from **DRAMSIM2_ini/** to **ini/** in **DRAMSIM2**: 
