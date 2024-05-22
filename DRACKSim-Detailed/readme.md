@@ -16,6 +16,14 @@
 ```
 patch -p1 < DRAMSim2.patch
 ```
+
+go inside DRAMSim2 and build DRAMSim2 as a library:
+```
+cd DRAMSim2
+make libdramsim.so
+cd ..
+```
+
 * Download and install the boost library in your system from **https://www.boost.org/users/download/** or use the copy we provide in this repo.
 * Extract boost in the same directory
 * Set the number of nodes and remote memory pools in the **mem_defs.h**
