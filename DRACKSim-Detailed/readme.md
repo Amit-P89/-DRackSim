@@ -26,7 +26,7 @@ cd ..
 
 * Download and install the boost library in your system from **https://www.boost.org/users/download/** or use the copy we provide in this repo.
 * Extract boost in the same directory
-* Set the number of nodes and remote memory pools in the **mem_defs.h**
+* Set the number of nodes and remote memory pools in the **mem_defs.cpp**
 * Set the number of instructions or simulation cycles to simulate in the **main.cpp** 
 * Create executable using '**make sim**'
 	
