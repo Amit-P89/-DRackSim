@@ -21,7 +21,7 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-ins
 * You can use the commands mentioned in gem5_commands_to_validate.sh, that we use to validate
 
 
-***If you use this tool, please cite it from:***
+***If you use this tool, please cite it as:***
 ```
 @inproceedings{10.1145/3615979.3656059,
 author = {Puri, Amit and Bellamkonda, Kartheek and Narreddy, Kailash and Jose, John and Tamarapalli, Venkatesh and Narayanan, Vijaykrishnan},
@@ -40,11 +40,3 @@ location = {<conf-loc>, <city>Atlanta</city>, <state>GA</state>, <country>USA</c
 series = {SIGSIM-PADS '24}
 }
 ```
-
-
-***This work is Accepted For Presentation at SIGSIM PADS'24, Atlanta, GA, USA:***
-https://sigsim.acm.org/conf/pads/2024/
-
-***DRackSim: Simulating CXL-enabled Large-Scale Disaggregated Memory Systems***
-
-*Amit Puri, Kartheek Bellamkonda, Kailash Narreddy, John Jose, Tamarapalli Venkatesh, Vijaykrishnan Narayanan*
