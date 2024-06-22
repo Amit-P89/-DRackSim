@@ -23,7 +23,22 @@ https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-ins
 
 ***If you use this tool, please cite it from:***
 ```
-https://arxiv.org/abs/2305.09977
+@inproceedings{10.1145/3615979.3656059,
+author = {Puri, Amit and Bellamkonda, Kartheek and Narreddy, Kailash and Jose, John and Tamarapalli, Venkatesh and Narayanan, Vijaykrishnan},
+title = {DRackSim: Simulating CXL-enabled Large-Scale Disaggregated Memory Systems},
+year = {2024},
+isbn = {9798400703638},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3615979.3656059},
+doi = {10.1145/3615979.3656059},
+booktitle = {Proceedings of the 38th ACM SIGSIM Conference on Principles of Advanced Discrete Simulation},
+pages = {3–14},
+numpages = {12},
+keywords = {CXL, Data Centers, Performance Evaluation, Simulation},
+location = {<conf-loc>, <city>Atlanta</city>, <state>GA</state>, <country>USA</country>, </conf-loc>},
+series = {SIGSIM-PADS '24}
+}
 ```
 
 
