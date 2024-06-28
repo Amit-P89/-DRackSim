@@ -15,6 +15,8 @@ using namespace std;
 #include <sstream>	
 #include <fstream>
 #define local_remote 1
+#define MEM_LOG 1
+
 uint64_t common_clock = 0;
 ofstream out,mem_stats,invalid,netstats;
 #include "mem_defs.cpp"
@@ -43,7 +45,7 @@ ofstream inst_queu_out;
 
 #define Result_cycle 50000000
 
-#define max_insts_to_simulate 50000000
+long int max_insts_to_simulate  = 1000000;
 
 
 void print_stats(int);
@@ -201,8 +203,7 @@ void *node_stream_handler(void *node)
 		for(int j=0;j<core_count;j++)
 		{
 			node_num_inst_issued+=num_inst_issued[nodeid][j];
-		}
-				
+		}	
 			
 		pthread_mutex_lock(&lock);
 
@@ -259,7 +260,7 @@ void *node_stream_handler(void *node)
 			common_clock++;
 		}
 
-		static int i=0;
+		static int counter=0;
 		combined_count = 0;
 		for (int i = 0; i < core_count; i++)
 		{
@@ -267,10 +268,12 @@ void *node_stream_handler(void *node)
 			if(inst_queue[nodeid][i].size())// || !reorder_buffer[nodeid][i].is_empty())
 				core_simulated_cycle[nodeid][i]++;
 		}
+
+		//some weird logic to close the program when the workload exits. 
 		if(combined_count==0)
 		{
-			i++;
-			if(i==2000)
+			counter++;
+			if(counter==2000)
 			{
 				cout<<"ooo";
 				break;
@@ -278,7 +281,7 @@ void *node_stream_handler(void *node)
 		}
 		else if(combined_count>0)
 		{
-			i=0;
+			counter=0;
 		}
 
 		total_num_inst_commited=0;
@@ -494,9 +497,11 @@ void print_stats(int node_id)
 	ResultsFile[node_id] << "\nTotal Issued instructions: \t\t\t\t\t" << total_num_inst_issued;
 	ResultsFile[node_id] << "\nTotal executed instructions: \t\t\t\t\t" << total_num_inst_exec;
 	ResultsFile[node_id] << "\nTotal committed instructions: \t\t\t\t\t" <<total_num_inst_commited;
-	float IPC=0;
+	double IPC=0;
 	for(int i=0;i<core_count;i++)
+	{
 		IPC=IPC+IPCC[i];
+	}
 	ResultsFile[node_id] << "\nIPC is: \t\t\t\t\t\t\t" << IPC;
 	ResultsFile[node_id] << "\nCPI is: \t\t\t\t\t\t\t" << 1/IPC;
 	ResultsFile[node_id] << "\nL3 cache demand accesses: \t\t\t\t\t" << num_l3_access[node_id];
@@ -577,11 +582,20 @@ int main(int argc, char *argv[])
 	}
 	if(argc<2)
 	{
-		cout<<"\nEnter output directory name for results\n";
+		cout<<"\n1. Enter output directory name for results as first argument \n";
+		cout<<"\n2. Optionally, mention the number of instructions to simulate as second argument (default is 1million)\n";
 		exit(0);
 	}
 	else if(argc==2)
+	{
 		dir=argv[1];
+		cout<<"\nInstructions to simulate set default to 1-million\n";
+	}
+	else if(argc==3)
+	{
+		dir=argv[1];
+		max_insts_to_simulate = atoi(argv[2]);
+	}
 
 	cout<<"\nEnter starting node number:";
 	cin>>nid;
