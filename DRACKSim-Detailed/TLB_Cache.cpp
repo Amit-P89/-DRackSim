@@ -1339,6 +1339,10 @@ void send_to_memory(miss_queue miss_new_entry, int node_id,bool is_write_back)
     {
         num_local[node_id]++;
         // pthread_mutex_lock(&lock_mem);
+        #ifdef MEM_LOG
+            invalid<<"\nLocal memory Request added to memory controller queue"<<"  Node-id: C"<<node_id<<"  Trans-ID:"<<trans_id
+            <<"  Addr:"<<hex<<"0x"<<mem_access_addr<<dec<<"  Current cycle"<<common_clock<<"  Miss cycle number:"<<miss_cycle;
+        #endif
         obj.add_one_and_run(local_mem[node_id], mem_access_addr, isWrite, trans_id, start_cycle, miss_cycle, node_id);
         // pthread_mutex_unlock(&lock_mem);
     }
@@ -1350,6 +1354,10 @@ void send_to_memory(miss_queue miss_new_entry, int node_id,bool is_write_back)
         uint64_t remote_page_addr = L[node_id].remote_page_addr(page_addr, remote_pool);
         remote_page_addr = remote_page_addr << 12;
         uint64_t remote_mem_access_addr = remote_page_addr + page_offset_addr;
+        #ifdef MEM_LOG
+            invalid<<"\nRemote memory Request send to interconnect"<<"  Source Node-id: C"<<node_id<<"  Trans-ID:"<<trans_id<<
+            "  Addr:"<<hex<<"0x"<<remote_mem_access_addr<<dec<<"  Current cycle"<<common_clock<<"  Miss cycle number:"<<miss_cycle;
+        #endif
         
         remote_memory_access mem_request;
         mem_request.source = node_id;
@@ -1375,6 +1383,11 @@ void send_RDMA_read(uint64_t page_addr,int node_id)
     uint64_t remote_mem_access_addr = remote_page_addr;
     // record_access(remote_mem_access_addr,node_id);
 
+    #ifdef MEM_LOG
+        invalid<<"\nRemote Page memory Request send to interconenct"<<"  Node-id: C"<<node_id<<"  Trans-ID:"<<trans_id<<"  Addr:"<<hex
+        <<"0x"<<(remote_mem_access_addr&0xfffffffff000)<<dec<<"  Current cycle"<<common_clock<<"  Miss cycle number:"<<common_clock;
+    #endif
+
     RDMA_request_queue[node_id][trans_id].start_cycle = common_clock;
     RDMA_request_queue[node_id][trans_id].pkt_count = 0;
     RDMA_request_queue[node_id][trans_id].page_addr = page_addr;
@@ -1393,6 +1406,10 @@ void send_RDMA_read(uint64_t page_addr,int node_id)
 
 void RDMA_request_complete(uint64_t trans_id,int node_id)
 {
+    #ifdef MEM_LOG
+        invalid<<"\nRemote Page memory Request completed and complete response reached at source node"<<"Node-id: C"<<node_id<<
+        "  Trans-ID:"<<trans_id<<"  Current cycle"<<common_clock<<"  Start cycle number:"<<RDMA_request_queue[node_id][trans_id].start_cycle;
+    #endif
     num_page_swaps[node_id]++;
     uint64_t time_taken_to_swap_page=RDMA_request_queue[node_id][trans_id].complete_cycle - RDMA_request_queue[node_id][trans_id].start_cycle;
     avg_page_access_time[node_id]=avg_page_access_time[node_id]+time_taken_to_swap_page;
