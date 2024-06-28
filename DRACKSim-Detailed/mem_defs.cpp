@@ -167,6 +167,11 @@ void update(int node_id, int mem_id, uint64_t cycle, uint64_t tid, uint64_t star
 		RDMA_response_queue[node_id][address]++;
 		if(RDMA_response_queue[node_id][address]%((int)ceil((double)64/(double)RDMA_packet_segments))==0 || RDMA_response_queue[node_id][address]==64)
 		{
+			#ifdef MEM_LOG
+				invalid<<"\nRemote memory Page Request(4KB)"<<"  Source Node-id: C"<<node_id<<" Trans-id:"<<tid<<" Addr:"<<hex<<address<<dec<<"  num_cacheline access(64B) completed:"<<RDMA_response_queue[node_id][address]
+				<<"  Remote mem Pool:"<<(i-num_nodes)<<" cycle"<<common_clock<<"  Memory request start cycle:"<<start_cycle;
+			#endif
+			
 			int remote_pool = i - num_nodes;
 			remote_memory_access mem_response;
 			mem_response.source = remote_pool;
@@ -188,6 +193,10 @@ void update(int node_id, int mem_id, uint64_t cycle, uint64_t tid, uint64_t star
 	//cache-line memory request
 	else if (tid<1e10 && i < num_nodes)
 	{
+		#ifdef MEM_LOG
+			invalid<<"\nLocal memory request completed (64B) completed"<<"  Node-id: C"<<node_id<<" Trans-id:"<<tid
+			<<" Addr:"<<hex<<"0x"<<address<<dec<<"  Current cycle"<<common_clock<<"  Memory Request start cycle:"<<start_cycle;
+		#endif
 		// calcuates memory transaction time and total cycles till now at memory unit with-in local node
 		remote_memory_access mem_response;
 		mem_response.source = node_id;
@@ -212,6 +221,11 @@ void update(int node_id, int mem_id, uint64_t cycle, uint64_t tid, uint64_t star
 	}
 	else if (tid<1e10 && i >= num_nodes && i < (num_nodes + num_mem_pools))
 	{
+		#ifdef MEM_LOG
+			invalid<<"\nRemote memory access completed, response to be sent "<<"  Node-id: C"<<node_id<<" Trans-id:"<<tid<<" Addr:"
+			<<hex<<"0x"<<address<<dec<<"  Current cycle"<<common_clock<<"  Memory Request start cycle:"<<start_cycle;
+		#endif
+
 		int remote_pool = i - num_nodes;
 		remote_memory_access mem_response;
 		mem_response.source = remote_pool;
@@ -418,7 +432,8 @@ void declare_memory_variables(string dir)
 
 	const char *inv1 = inv.c_str();
 	invalid.open(inv1);
-	invalid << "\nLog Turned Off, Un-comment log statements in mem_defs.h read and write complete functions to turn it on";
+	invalid <<"\n=================Memory Request Log=================\n\n";
+	// invalid << "\nLog Turned Off, Un-comment log statements in mem_defs.h read and write complete functions to turn it on";
 	const char *tra1 = tra.c_str();
 	track.open(tra1);
 	const char *ou1 = ou.c_str();
@@ -442,6 +457,11 @@ void add_local_access_time(remote_memory_access mem_response)
 // stats for remote access
 void add_remote_access_time(remote_memory_access mem_response)
 {
+	#ifdef MEM_LOG
+		invalid<<"\nRemote memory response reached compute node "<<"  Request Source Node:"<<mem_response.dest<<"  Trans-ID:"<<
+		mem_response.trans_id<<"  Addr:"<<hex<<"0x"<<mem_response.mem_access_addr<<dec<<"  Performed at memory pool-id: C"<<mem_response.source
+		<<"  Current cycle:"<<common_clock<<"  Miss cycle number:"<<mem_response.miss_cycle_num;
+	#endif
    int node_id = mem_response.dest;
    unsigned long trans_id = mem_response.trans_id;
    int core_id = core_map[node_id][trans_id];
