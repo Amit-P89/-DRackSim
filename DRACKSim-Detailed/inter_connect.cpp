@@ -9,8 +9,10 @@
 //(DELL POWERSWITCH Z9432F-ON), allows 128 ports of 100GbE(used in this simulation), or 32-ports of 400GbE
 // has buffer size of 132MB,
 
-double per_port_mb = ceil((double)132 / (num_nodes + num_mem_pools));
+// double per_port_mb = ceil((double)132 / (num_nodes + num_mem_pools));
 
+
+double per_port_mb = 0.25;
 long double tx_per_port_mb = (per_port_mb / 2);
 long double rx_per_port_mb = (per_port_mb / 2);
 
@@ -635,6 +637,10 @@ void remote_memory_add(deque<packet> *packet_queue_pool)
 			// pthread_mutex_lock(&lock_queue);
 			if(temp.isRDMA)
 			{
+				#ifdef MEM_LOG
+					invalid<<"\nRemote page Request reached memory pool and added to control queue"<<"  Trans-ID:"<<temp.trans_id<<"  Addr:"<<hex
+					<<"0x"<<temp.mem_access_addr<<dec<<"  Source node-id: C"<<temp.source<<"  Current cycle"<<common_clock<<"  Miss cycle number:"<<temp.miss_cycle_num;
+				#endif
 				//for RDMA added 64 packets for the page and add this page id into a queue
 				for(int j=0;j<64;j++)
 				{
@@ -643,6 +649,11 @@ void remote_memory_add(deque<packet> *packet_queue_pool)
 			}
 			else
 			{
+				#ifdef MEM_LOG
+					invalid<<"\nRemote memory Request reached memory pool and added to memory controller queue"<<"  Trans-ID:"<<temp.trans_id<<
+					"  Addr:"<<hex<<"0x"<<temp.mem_access_addr<<dec<<"  Source node-id: C"<<temp.source<<"  Current cycle"<<common_clock<<"  Miss cycle number:"
+					<<temp.miss_cycle_num;
+				#endif
 				obj.add_one_and_run(remote_mem[i], temp.mem_access_addr, temp.isWrite, temp.trans_id, temp.cycle, temp.miss_cycle_num, temp.source);
 			}
 			// pthread_mutex_unlock(&lock_queue);
