@@ -265,7 +265,7 @@ void *node_stream_handler(void *node)
 		for (int i = 0; i < core_count; i++)
 		{
 			combined_count += core_inst_stream[nodeid][i].size();
-			if(inst_queue[nodeid][i].size())// || !reorder_buffer[nodeid][i].is_empty())
+			if(inst_queue[nodeid][i].size() || !reorder_buffer[nodeid][i].is_empty())
 				core_simulated_cycle[nodeid][i]++;
 		}
 
