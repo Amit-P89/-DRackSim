@@ -45,7 +45,7 @@ ofstream inst_queu_out;
 
 #define Result_cycle 50000000
 
-long int max_insts_to_simulate  = 1000000;
+long int max_insts_to_simulate  = 10000000;
 
 
 void print_stats(int);
