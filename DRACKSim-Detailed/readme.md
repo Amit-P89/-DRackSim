@@ -43,7 +43,7 @@ cd ..
 	- '**-T 1/0**' : '**1**' will only simulate multi-threaded part of the workload
 	- '**-S n**' : skip '**n**' initial instructions
 	- '**-S**' and '**-T**' can be used together; skipping will be done in multi-threaded part if '**-T 1**' is used.
-	- '**-M**' : Number of instructions to trace and simulate (default 10000000) 	
-* In the second terminal, start simulator DRackSim and pass the name of the output directory to it, e.g., ' **./DRackSim abc numINST (1M default)** '
+	- '**-M**' : Number of instructions to trace and simulate (default 10M) 	
+* In the second terminal, start simulator DRackSim and pass the name of the output directory to it, e.g., ' **./DRackSim abc numINST (10M default)** '
 * The simulation will start and continue until the exit condition arrives.
 * The frequency of printing results can be changed using pre-processor #Result_cycle in main.cpp
