@@ -391,8 +391,8 @@ static VOID Fini(int code, VOID *v)
     shmdt(Mutex);
     shmdt(main_start);
 
-    shmctl(ShmID1, IPC_RMID, NULL);
-    shmctl(ShmID2, IPC_RMID, NULL);
+    // shmctl(ShmID1, IPC_RMID, NULL);
+    // shmctl(ShmID2, IPC_RMID, NULL);
 
     PIN_MutexFini(Mutex);
     PIN_MutexFini(&Mutex1);
