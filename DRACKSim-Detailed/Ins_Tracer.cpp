@@ -46,7 +46,7 @@ using std::string;
 INT32 numThreads = 0;
 
 PIN_LOCK lock;
-PIN_MUTEX *Mutex, Mutex1;
+PIN_MUTEX Mutex, Mutex1;
 
 // a running count of the instructions
 class thread_data_t
@@ -129,9 +129,9 @@ static VOID InsRef(UINT32 threadid, string ins, ADDRINT addr, ADDRINT read_op, U
     {
        if(numThreads<2)
         {
-            PIN_MutexLock(Mutex);
+            PIN_MutexLock(&Mutex);
             *main_start=*main_start+1;
-            PIN_MutexUnlock(Mutex);
+            PIN_MutexUnlock(&Mutex);
             ins_count=1;
             return;
         }
@@ -388,13 +388,13 @@ static VOID Fini(int code, VOID *v)
 
     PIN_MutexUnlock(&Mutex1);
 
-    shmdt(Mutex);
+    // shmdt(Mutex);
     shmdt(main_start);
 
     // shmctl(ShmID1, IPC_RMID, NULL);
     // shmctl(ShmID2, IPC_RMID, NULL);
 
-    PIN_MutexFini(Mutex);
+    PIN_MutexFini(&Mutex);
     PIN_MutexFini(&Mutex1);
 
     TraceFile.close();
@@ -409,11 +409,11 @@ extern int main(int argc, char *argv[])
 {
     PIN_Init(argc, argv);
 
-    shmdt(Mutex);
+    // shmdt(Mutex);
     shmdt(main_start);
     shmdt(num_ins);
 
-    shmctl(ShmID1, IPC_RMID, NULL);
+    // shmctl(ShmID1, IPC_RMID, NULL);
     shmctl(ShmID2, IPC_RMID, NULL);
     shmctl(ShmID4, IPC_RMID, NULL);
     
@@ -433,10 +433,10 @@ extern int main(int argc, char *argv[])
     }
 
     // Shared mutex between processes on single node to synchronize access on shared instruction buffer
-    ShmKEY1 = 10*Nodeid;
-    ShmID1 = shmget(ShmKEY1, sizeof(PIN_MUTEX), IPC_CREAT | 0666);
-    Mutex = (PIN_MUTEX *)shmat(ShmID1, NULL, 0);
-    PIN_MutexInit(Mutex);
+    // ShmKEY1 = 10*Nodeid;
+    // ShmID1 = shmget(ShmKEY1, sizeof(PIN_MUTEX), IPC_CREAT | 0666);
+    // Mutex = (PIN_MUTEX *)shmat(ShmID1, NULL, 0);
+    // PIN_MutexInit(&Mutex);
 
     // Variable to inform other processes on this node about start of actual tracing
     ShmKEY2 = 10*Nodeid+1;
