@@ -17,9 +17,11 @@ using namespace std;
 #define local_remote 1
 #define MEM_LOG 1
 
+
 uint64_t common_clock = 0;
 ofstream out,mem_stats,invalid,netstats;
 #include "mem_defs.cpp"
+
 
 
 //DDR4 used with frequency 1200-MHz
@@ -83,6 +85,9 @@ void Schedule_Instruction_on_cpu_cores(int node)
 }
 
 
+int Sim_complete[num_nodes]={0};
+bool allSim_complete=false;
+
 int nid=0;
 
 std::ofstream ResultsFile[num_nodes];
@@ -106,19 +111,17 @@ void *node_stream_handler(void *node)
 	std::ifstream TraceFile;
 	string in;
 	std::ostringstream ss, tf;
-	ss << nid;
+	ss << (nid + nodeid - 1);
 	int fileid = 0;
 	tf << fileid;
 	string f1 = "./Output/Node" + ss.str() + "/TraceFile" + tf.str() + ".trc";
 	const char *file1 = f1.c_str();
 
-	//cout<<f1<<endl;
-	
-	ShmKEY1 = 10 * nid + 1;
+	ShmKEY1 = 10 * (nid + nodeid -1) + 1;
 	ShmID1 = shmget(ShmKEY1, sizeof(int), IPC_CREAT | 0666);
 	main_start = (int *)shmat(ShmID1, NULL, 0);
 
-	ShmKEY3 = 10 * nid + 3;
+	ShmKEY3 = 10 * (nid + nodeid -1) + 3;
 	ShmID3 = shmget(ShmKEY3, sizeof(uint64_t), IPC_CREAT | 0666);
 	num_ins = (uint64_t *)shmat(ShmID3, NULL, 0);
 
@@ -134,7 +137,10 @@ void *node_stream_handler(void *node)
 	//for single node, number of instructions can be also used to mark the end of simulation
 	{
 		pthread_barrier_wait(&b); 
-
+		if(allSim_complete)
+		{
+			break;
+		}
 		// pintool writes a max_ins number of instructions in a file and creates a new file everytime, delete old once it is read
 		//(this hack is used to save disk space to avoid large instruction traces)
 		// here we close previous file and open new file everytime we go for reading more instructions from the stream
@@ -273,10 +279,21 @@ void *node_stream_handler(void *node)
 		if(combined_count==0)
 		{
 			counter++;
-			if(counter==2000)
+			if(counter>2000)
 			{
-				cout<<"ooo";
-				break;
+				pthread_mutex_lock(&lock);
+				Sim_complete[nodeid]=1;
+				pthread_mutex_unlock(&lock);
+				for(int i=0;i<num_nodes;i++)
+				{
+					if(Sim_complete[i]==0)
+					{
+						allSim_complete=false;
+						break;
+					}
+					else
+						allSim_complete=true;
+				}
 			}
 		}
 		else if(combined_count>0)
@@ -295,7 +312,7 @@ void *node_stream_handler(void *node)
 	shmctl(ShmID3, IPC_RMID, NULL);
 	shmdt(main_start);
 	shmdt(num_ins);
-
+	cout<<"\nNode simulation complete, exiting nodeid:"<<nodeid<<endl;
 	pthread_exit(NULL);
 }
 
@@ -577,6 +594,8 @@ int main(int argc, char *argv[])
 	// 		}
 	// 	}
 	// }
+
+
 	for(int i=0;i<num_nodes;i++){
 		RDMA_trans_id[i] = 1e12;
 	}
@@ -599,6 +618,7 @@ int main(int argc, char *argv[])
 
 	cout<<"\nEnter starting node number:";
 	cin>>nid;
+
 	declare_memory_variables(dir);
 	pthread_barrier_init(&b, NULL, num_nodes);
 	pthread_mutex_init(&lock, NULL);
