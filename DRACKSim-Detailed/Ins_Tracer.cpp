@@ -45,7 +45,7 @@ using std::string;
 
 INT32 numThreads = 0;
 
-PIN_LOCK lock;
+PIN_LOCK lock1;
 PIN_MUTEX Mutex, Mutex1;
 
 // a running count of the instructions
@@ -69,9 +69,9 @@ thread_data_t *get_tls(THREADID threadid)
 
 VOID ThreadStart(THREADID threadid, CONTEXT *ctxt, INT32 flags, VOID *v)
 {
-    PIN_GetLock(&lock, threadid + 1);
+    PIN_GetLock(&lock1, threadid + 1);
     numThreads++;
-    PIN_ReleaseLock(&lock);
+    PIN_ReleaseLock(&lock1);
     thread_data_t *tdata = new thread_data_t;
     PIN_SetThreadData(tls_key, tdata, threadid);
     /*    if (PIN_SetThreadData(tls_key, tdata, threadid) == FALSE)
@@ -418,7 +418,7 @@ extern int main(int argc, char *argv[])
     shmctl(ShmID4, IPC_RMID, NULL);
     
     // Initialize lock
-    PIN_InitLock(&lock);
+    PIN_InitLock(&lock1);
     // LOCALVAR UL2::CACHE ul2
 
  
