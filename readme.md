@@ -4,9 +4,9 @@
 <h3>Usage Instructions</h3>
 
 ***Installing Pin***
-* Download pin-3.30-98830-g1d7b601b3-gcc-linux.tar.gz from 
+* Download pin-3.20-98437-gf02b61307-gcc-linux.tar.gz from 
 
-https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-instrumentation-tool-downloads.html
+[https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-instrumentation-tool-downloads.html](https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.20-98437-gf02b61307-gcc-linux.tar.gz)
 
 ***Detailed Cycle-Level Simulation model of DRACKSim:***
 * Go in directory DRACKSim-Detailed and follow the instructions in readme.md file
